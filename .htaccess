@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Redirect shortened URLs to redirect.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9]+)$ redirect.php?code=$1 [L,QSA]
+
+# Redirect root to index.php
+RewriteRule ^$ index.php [L]
