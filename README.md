@@ -1,63 +1,109 @@
-# URL Shortener
+# Ad Campaign Management + URL Shortener Platform
 
-A simple PHP-based URL shortening service that allows you to create short URLs that redirect to longer ones.
-
-## Quick Installation
-
-1. Place all files in your web server directory (e.g., XAMPP's htdocs folder).
-2. Visit `http://your-domain/install.php` to automatically create the database and table.
-3. Delete `install.php` after installation for security.
-
-## Manual Installation
+A web-based platform for managing advertising campaigns with URL shortening and click tracking capabilities.
 
 ## Features
 
-- Shorten long URLs into compact links
-- Track click counts for each shortened URL
-- View statistics of all shortened URLs
-- Simple and clean interface
+- **Super Admin Panel**
+  - Manage Admin users
+  - View all campaigns and advertisers
+  - Full system control
 
-## Setup Instructions
+- **Admin Panel**
+  - Manage advertisers
+  - Create and manage campaigns
+  - Generate short URLs
+  - Monitor campaign performance
 
-1. Create a MySQL database and run the SQL commands in `database.sql` to create the required table.
+- **Advertiser Management**
+  - Add/edit/delete advertisers
+  - Track advertiser information
 
-2. Update the database credentials in `config.php` if needed:
-   ```php
-   $host = 'localhost';
-   $dbname = 'shorturl';
-   $username = 'root';
-   $password = '';
-   ```
+- **Campaign Management**
+  - Create campaigns with start/end dates
+  - Set campaign types (CPR, CPL, CPC, CPM, CPS, None)
+  - Automatic short URL generation (e.g., p1, p2, etc.)
+  - Click tracking
+  - Automatic status updates based on dates
 
-3. Place all files in your web server directory (e.g., XAMPP's htdocs folder).
+- **URL Shortening & Redirect**
+  - Short URLs like https://yourdomain.com/p1
+  - Automatic redirect to original URL
+  - Click counting
+  - Expiration handling
 
-4. Make sure mod_rewrite is enabled in Apache for URL rewriting to work.
+## System Requirements
+
+- PHP 7.0 or higher
+- MySQL 5.0 or higher
+- Apache with mod_rewrite enabled
+
+## Installation
+
+1. **Database Setup**
+   - Create a MySQL database
+   - Execute the `database.sql` file to create tables and insert the default super admin user
+
+2. **Configuration**
+   - Update `config.php` with your database credentials
+
+3. **Default Login**
+   - Username: `superadmin`
+   - Password: `admin123`
+   - *Note: Change this password immediately after first login*
 
 ## Usage
 
-1. Visit the main page to shorten URLs.
-2. Enter a long URL and click "Shorten URL".
-3. Copy the generated short URL and share it.
-4. When someone visits the short URL, they will be redirected to the original URL.
-5. Visit `/admin.php` to view statistics for all shortened URLs.
+1. **Super Admin**
+   - Login with super admin credentials
+   - Create admin users
+   - Monitor overall system performance
 
-## How It Works
+2. **Admins**
+   - Login with assigned credentials
+   - Add advertisers
+   - Create campaigns
+   - Track clicks and campaign performance
 
-1. When a user submits a URL to shorten:
-   - A unique short code is generated
-   - The original URL and short code are stored in the database
-   - The short URL is displayed to the user
+3. **Campaign URLs**
+   - When a campaign is created, a short URL is automatically generated
+   - Example: https://yourdomain.com/p5
+   - These URLs automatically track clicks and redirect to the original URL
 
-2. When someone visits a short URL:
-   - The system looks up the short code in the database
-   - Increments the click counter for that URL
-   - Redirects the user to the original URL
+## Cron Job
+
+Set up a daily cron job to automatically update expired campaigns:
+
+```bash
+0 0 * * * /usr/bin/php /path/to/your/site/cron_update_expired.php
+```
 
 ## File Structure
 
-- `index.php` - Main page for shortening URLs
-- `redirect.php` - Handles redirection from short URLs to original URLs
-- `admin.php` - Displays statistics for all shortened URLs
-- `config.php` - Database configuration
-- `database.sql` - SQL schema for creating the database table
-- `.htaccess` - Apache rewrite rules for clean URLs
+```
+ads-platforms/
+├── admin/                 # Admin panel files
+│   ├── dashboard.php
+│   ├── advertisers.php
+│   └── campaigns.php
+├── super_admin/           # Super Admin panel files
+│   ├── dashboard.php
+│   ├── advertisers.php
+│   ├── campaigns.php
+│   └── admins.php
+├── .htaccess              # URL rewriting rules
+├── config.php             # Database configuration
+├── database.sql           # Database schema
+├── login.php              # Login page
+├── logout.php             # Logout functionality
+├── redirect.php           # URL redirect and tracking
+├── cron_update_expired.php # Cron job script
+└── README.md              # This file
+```
+
+## Security Notes
+
+- Always change the default super admin password after installation
+- Use HTTPS in production environments
+- Regularly update and patch your server software
+- Implement additional security measures as needed for your environment

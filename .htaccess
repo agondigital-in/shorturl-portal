@@ -1,9 +1,12 @@
 RewriteEngine On
 
-# Redirect shortened URLs to redirect.php
+# Redirect short URLs to redirect.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([a-zA-Z0-9]+)$ redirect.php?code=$1 [L,QSA]
+RewriteRule ^([pP][0-9]+)$ redirect.php?p=$1 [L,QSA]
 
-# Redirect root to index.php
-RewriteRule ^$ index.php [L]
+# Redirect root to login page
+RewriteRule ^$ login.php [L]
+
+# Custom error pages
+ErrorDocument 404 /error.php
