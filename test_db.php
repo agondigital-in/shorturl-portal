@@ -36,11 +36,38 @@ if ($result) {
     echo "<p>❌ Error accessing campaigns table: " . $conn->error . "</p>";
 }
 
+// Test publishers table
+$result = $conn->query("SELECT COUNT(*) as count FROM publishers");
+if ($result) {
+    $row = $result->fetch_assoc();
+    echo "<p>✅ Publishers table exists. Total publishers: " . $row['count'] . "</p>";
+} else {
+    echo "<p>❌ Error accessing publishers table: " . $conn->error . "</p>";
+}
+
+// Test campaign_advertisers table
+$result = $conn->query("SELECT COUNT(*) as count FROM campaign_advertisers");
+if ($result) {
+    $row = $result->fetch_assoc();
+    echo "<p>✅ Campaign_Advertisers table exists. Total records: " . $row['count'] . "</p>";
+} else {
+    echo "<p>❌ Error accessing campaign_advertisers table: " . $conn->error . "</p>";
+}
+
+// Test campaign_publishers table
+$result = $conn->query("SELECT COUNT(*) as count FROM campaign_publishers");
+if ($result) {
+    $row = $result->fetch_assoc();
+    echo "<p>✅ Campaign_Publishers table exists. Total records: " . $row['count'] . "</p>";
+} else {
+    echo "<p>❌ Error accessing campaign_publishers table: " . $conn->error . "</p>";
+}
+
 echo "<h2>Sample Data</h2>";
 
 // Show sample users
 echo "<h3>Users</h3>";
-$result = $conn->query("SELECT * FROM users");
+$result = $conn->query("SELECT * FROM users LIMIT 5");
 if ($result->num_rows > 0) {
     echo "<table border='1'>";
     echo "<tr><th>ID</th><th>Username</th><th>Role</th><th>Created At</th></tr>";
