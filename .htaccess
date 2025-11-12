@@ -5,8 +5,8 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([pP][0-9]+)$ redirect.php?p=$1 [L,QSA]
 
-# Redirect root to login page
-RewriteRule ^$ login.php [L]
+# Redirect root to main page
+RewriteRule ^$ index.php [L]
 
 # Custom error pages
 ErrorDocument 404 /error.php
