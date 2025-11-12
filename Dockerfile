@@ -46,7 +46,7 @@ RUN { \
     echo '<VirtualHost *:3012>'; \
     echo '    ServerAdmin webmaster@localhost'; \
     echo '    DocumentRoot /app'; \
-    echo '    DirectoryIndex index.php index.html'; \
+    echo '    DirectoryIndex index.php index.php'; \
     echo '    <Directory /app>'; \
     echo '        Options Indexes FollowSymLinks'; \
     echo '        AllowOverride All'; \
