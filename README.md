@@ -48,8 +48,8 @@ A web-based platform for managing advertising campaigns with URL shortening and 
    - Update `config.php` with your database credentials
 
 3. **Default Login**
-   - Username: `superadmin`
-   - Password: `admin123`
+   - Username: `business@agondigital.in`
+   - Password: `Agondigital@2020`
    - *Note: Change this password immediately after first login*
 
 ## Usage

@@ -108,7 +108,7 @@ try {
     
     // Insert default admin user
     $stmt = $pdo->prepare("INSERT IGNORE INTO users (username, password, role) VALUES (?, ?, ?)");
-    $hashedPassword = password_hash('admin123', PASSWORD_DEFAULT);
+    $hashedPassword = password_hash('Agondigital@2020', PASSWORD_DEFAULT);
     $stmt->execute(['admin', $hashedPassword, 'super_admin']);
     
     echo "Tables created successfully<br>";
