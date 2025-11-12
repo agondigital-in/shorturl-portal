@@ -23,27 +23,38 @@ $cfg['Servers'][$i]['extension'] = 'mysqli';
 $cfg['Servers'][$i]['AllowNoPassword'] = true;
 $cfg['Lang'] = '';
 
+/* for short url */
+
+$cfg['Servers'][$i]['host'] = '195.35.21.91';
+$cfg['Servers'][$i]['port'] = '3308'; // or your custom port
+$cfg['Servers'][$i]['auth_type'] = 'cookie';
+$cfg['Servers'][$i]['user'] = 'root'; // leave empty for login prompt
+$cfg['Servers'][$i]['password'] = '5LXt1R9zs7VBbcSS7HzP2SOXpCj9hjvuuaKlYGdZERkXpXPmD4HRzZEJQU1Iz2F9'; // leave empty for login prompt
+$cfg['Servers'][$i]['compress'] = false;
+$cfg['Servers'][$i]['AllowNoPassword'] = false;
+$i++;
+
 /* for Webnicts */
 
-// $cfg['Servers'][$i]['host'] = '195.35.21.91';
-// $cfg['Servers'][$i]['port'] = '3306'; // or your custom port
-// $cfg['Servers'][$i]['auth_type'] = 'cookie';
-// $cfg['Servers'][$i]['user'] = 'root'; // leave empty for login prompt
-// $cfg['Servers'][$i]['password'] = 'lPoDLYqLMT9LZmsRcTySRwbUGde4lrDfNveXG0QF8hDv98ILA7F3Zybcd8WQDIMN'; // leave empty for login prompt
-// $cfg['Servers'][$i]['compress'] = false;
-// $cfg['Servers'][$i]['AllowNoPassword'] = false;
-// $i++;
+$cfg['Servers'][$i]['host'] = '195.35.21.91';
+$cfg['Servers'][$i]['port'] = '3306'; // or your custom port
+$cfg['Servers'][$i]['auth_type'] = 'cookie';
+$cfg['Servers'][$i]['user'] = 'root'; // leave empty for login prompt
+$cfg['Servers'][$i]['password'] = 'lPoDLYqLMT9LZmsRcTySRwbUGde4lrDfNveXG0QF8hDv98ILA7F3Zybcd8WQDIMN'; // leave empty for login prompt
+$cfg['Servers'][$i]['compress'] = false;
+$cfg['Servers'][$i]['AllowNoPassword'] = false;
+$i++;
 
 /* kamateraho */
 
-// $cfg['Servers'][$i]['host'] = '195.35.21.91';
-// $cfg['Servers'][$i]['port'] = '3307'; // or your custom port
-// $cfg['Servers'][$i]['auth_type'] = 'cookie';
-// $cfg['Servers'][$i]['user'] = 'root'; // leave empty for login prompt
-// $cfg['Servers'][$i]['password'] = '83yzJKM9GLlO1KyrFPotc6zX9PhVKjfGIh7CsZkW9uyo1C06RuZMwPipLH109eTx'; // leave empty for login prompt
-// $cfg['Servers'][$i]['compress'] = false;
-// $cfg['Servers'][$i]['AllowNoPassword'] = false;
-// $i++;
+$cfg['Servers'][$i]['host'] = '195.35.21.91';
+$cfg['Servers'][$i]['port'] = '3307'; // or your custom port
+$cfg['Servers'][$i]['auth_type'] = 'cookie';
+$cfg['Servers'][$i]['user'] = 'root'; // leave empty for login prompt
+$cfg['Servers'][$i]['password'] = '83yzJKM9GLlO1KyrFPotc6zX9PhVKjfGIh7CsZkW9uyo1C06RuZMwPipLH109eTx'; // leave empty for login prompt
+$cfg['Servers'][$i]['compress'] = false;
+$cfg['Servers'][$i]['AllowNoPassword'] = false;
+$i++;
 /* Bind to the localhost ipv4 address and tcp */
 $cfg['Servers'][$i]['host'] = '127.0.0.1';
 $cfg['Servers'][$i]['connect_type'] = 'tcp';
