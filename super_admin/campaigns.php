@@ -62,7 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_campaign'])) {
             $stmt->bind_param("si", $short_code, $campaign_id);
             
             if ($stmt->execute()) {
-                $success = "Campaign added successfully! Short URL: <a href='../$short_code' target='_blank'>../$short_code</a>";
+                // Redirect to dashboard after successful campaign creation
+                header("Location: dashboard.php");
+                exit();
             } else {
                 $error = "Error updating campaign short code: " . $conn->error;
             }
