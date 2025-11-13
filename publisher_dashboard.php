@@ -90,8 +90,8 @@ try {
                                         <td><?php echo htmlspecialchars($campaign['campaign_type']); ?></td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <code>https://localhost/tracking/c/<?php echo htmlspecialchars($campaign['short_code']); ?></code>
-                                                <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" onclick="copyToClipboard('https://localhost/tracking/c/<?php echo htmlspecialchars($campaign['short_code']); ?>', this)">Copy</button>
+                                                <code>https://tracking.agondigital.in/c/<?php echo htmlspecialchars($campaign['short_code']); ?></code>
+                                                <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" onclick="copyToClipboard('https://tracking.agondigital.in/c/<?php echo htmlspecialchars($campaign['short_code']); ?>', this)">Copy</button>
                                             </div>
                                         </td>
                                         <td><?php echo $campaign['clicks']; ?></td>

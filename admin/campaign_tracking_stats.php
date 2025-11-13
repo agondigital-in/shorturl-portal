@@ -110,7 +110,7 @@ try {
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Base Short Code:</strong> <?php echo htmlspecialchars($campaign['shortcode']); ?> <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" onclick="copyToClipboard('https://localhost/tracking/<?php echo htmlspecialchars($campaign['shortcode']); ?>', this)">Copy Link</button></p>
+                                <p><strong>Base Short Code:</strong> <?php echo htmlspecialchars($campaign['shortcode']); ?> <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" onclick="copyToClipboard('https://tracking.agondigital.in/<?php echo htmlspecialchars($campaign['shortcode']); ?>', this)">Copy Link</button></p>
                                 <p><strong>Advertisers:</strong> <?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?></p>
                                 <p><strong>Start Date:</strong> <?php echo htmlspecialchars($campaign['start_date']); ?></p>
                             </div>
@@ -152,8 +152,8 @@ try {
                                                 <td><?php echo htmlspecialchars($stats['short_code']); ?></td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <code id="tracking-link-<?php echo $stats['short_code']; ?>">https://localhost/tracking/c/<?php echo htmlspecialchars($stats['short_code']); ?></code>
-                                                        <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" data-link="https://localhost/tracking/c/<?php echo htmlspecialchars($stats['short_code']); ?>" onclick="copyToClipboard('https://localhost/tracking/c/<?php echo htmlspecialchars($stats['short_code']); ?>', this)">Copy</button>
+                                                        <code id="tracking-link-<?php echo $stats['short_code']; ?>">https://tracking.agondigital.in/c/<?php echo htmlspecialchars($stats['short_code']); ?></code>
+                                                        <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" data-link="https://tracking.agondigital.in/c/<?php echo htmlspecialchars($stats['short_code']); ?>" onclick="copyToClipboard('https://tracking.agondigital.in/c/<?php echo htmlspecialchars($stats['short_code']); ?>', this)">Copy</button>
                                                     </div>
                                                 </td>
                                                 <td><?php echo $stats['clicks']; ?></td>
