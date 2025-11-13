@@ -19,7 +19,7 @@ if ($env === false) {
 
 // Database configuration with defaults
 $host = $env['DB_HOST'] ?? 'localhost';
-$port = $env['DB_PORT'] ?? '3012';
+$port = $env['DB_PORT'] ?? '3308';
 $dbname = $env['DB_DATABASE'] ?? 'default';
 $username = $env['DB_USERNAME'] ?? 'root';
 $password = $env['DB_PASSWORD'] ?? '';
