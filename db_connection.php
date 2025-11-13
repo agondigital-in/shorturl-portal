@@ -6,15 +6,28 @@ class Database {
     private $connection;
     
     private function __construct() {
-        // Load environment variables
-        $env = parse_ini_file('.env');
+        // Load environment variables with proper path resolution
+        $env_file = __DIR__ . '/.env';
         
-        // Database configuration
-        $host = $env['DB_HOST'];
-        $port = $env['DB_PORT'];
-        $dbname = $env['DB_DATABASE'];
-        $username = $env['DB_USERNAME'];
-        $password = $env['DB_PASSWORD'];
+        // Check if .env file exists
+        if (!file_exists($env_file)) {
+            die("Environment file not found. Please create .env file with database configuration.");
+        }
+        
+        // Parse the .env file
+        $env = parse_ini_file($env_file);
+        
+        // Check if parse_ini_file succeeded
+        if ($env === false) {
+            die("Failed to parse environment file.");
+        }
+        
+        // Database configuration with defaults
+        $host = $env['DB_HOST'] ?? 'localhost';
+        $port = $env['DB_PORT'] ?? '3306';
+        $dbname = $env['DB_DATABASE'] ?? 'tracking';
+        $username = $env['DB_USERNAME'] ?? 'root';
+        $password = $env['DB_PASSWORD'] ?? '';
         
         try {
             $this->connection = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8", $username, $password);
