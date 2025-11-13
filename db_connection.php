@@ -22,7 +22,7 @@ $host = $_ENV['DB_HOST'] ?? 'localhost';
 $dbname = $_ENV['DB_DATABASE'] ?? 'tracking';
 $username = $_ENV['DB_USERNAME'] ?? 'root';
 $password = $_ENV['DB_PASSWORD'] ?? '';
-$port = $_ENV['DB_PORT'] ?? '3306';
+$port = $_ENV['DB_PORT'] ?? '3308';
 
 // PDO connection
 try {
