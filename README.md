@@ -1,109 +1,79 @@
-# Ad Campaign Management + URL Shortener Platform
+# Ads Platform
 
-A web-based platform for managing advertising campaigns with URL shortening and click tracking capabilities.
+A comprehensive advertising management system that allows Super Admins, Admins, Publishers, and Advertisers to manage advertising campaigns.
 
 ## Features
 
-- **Super Admin Panel**
-  - Manage Admin users
-  - View all campaigns and advertisers
-  - Full system control
-
-- **Admin Panel**
-  - Manage advertisers
-  - Create and manage campaigns
-  - Generate short URLs
-  - Monitor campaign performance
-
-- **Advertiser Management**
-  - Add/edit/delete advertisers
-  - Track advertiser information
-
-- **Campaign Management**
-  - Create campaigns with start/end dates
-  - Set campaign types (CPR, CPL, CPC, CPM, CPS, None)
-  - Automatic short URL generation (e.g., p1, p2, etc.)
-  - Click tracking
-  - Automatic status updates based on dates
-
-- **URL Shortening & Redirect**
-  - Short URLs like https://yourdomain.com/p1
-  - Automatic redirect to original URL
-  - Click counting
-  - Expiration handling
-
-## System Requirements
-
-- PHP 7.0 or higher
-- MySQL 5.0 or higher
-- Apache with mod_rewrite enabled
+- **Super Admin Dashboard**: Full access to all platform features
+- **Admin Dashboard**: Manage campaigns, advertisers, and publishers
+- **Publisher Dashboard**: View and track assigned campaigns
+- **Campaign Management**: Create and manage advertising campaigns with short URLs
+- **Analytics**: Track campaign performance and generate reports
+- **User Management**: Role-based access control system
 
 ## Installation
 
-1. **Database Setup**
-   - Create a MySQL database
-   - Execute the `database.sql` file to create tables and insert the default super admin user
+1. **Prerequisites**:
+   - XAMPP or LAMP stack with PHP 7+, Apache, and MySQL
+   - Make sure Apache mod_rewrite is enabled
 
-2. **Configuration**
-   - Update `config.php` with your database credentials
+2. **Setup**:
+   - Clone or copy the project files to your web server directory (e.g., `htdocs/tracking`)
+   - Update the [.env](file:///C:/xampp/htdocs/tracking/.env) file with your database credentials
+   - Run the installation script:
+     ```
+     cd c:\xampp\htdocs\tracking
+     C:\xampp\php\php.exe install.php
+     ```
+   - The script will create the database and tables, and set up a default super admin account
 
-3. **Default Login**
-   - Username: `business@agondigital.in`
+3. **Default Login Credentials**:
+   - Username: `admin`
    - Password: `Agondigital@2020`
-   - *Note: Change this password immediately after first login*
 
-## Usage
+## URL Structure
 
-1. **Super Admin**
-   - Login with super admin credentials
-   - Create admin users
-   - Monitor overall system performance
+- **Main Pages**:
+  - [index.php](file:///C:/xampp/htdocs/tracking/index.php) - Main landing page
+  - [login.php](file:///C:/xampp/htdocs/tracking/login.php) - Admin login
+  - [publisher_login.php](file:///C:/xampp/htdocs/tracking/publisher_login.php) - Publisher login
 
-2. **Admins**
-   - Login with assigned credentials
-   - Add advertisers
-   - Create campaigns
-   - Track clicks and campaign performance
+- **Dashboard Routes**:
+  - [/admin/dashboard.php](file:///C:/xampp/htdocs/tracking/admin/dashboard.php) - Admin dashboard
+  - [/super_admin/dashboard.php](file:///C:/xampp/htdocs/tracking/super_admin/dashboard.php) - Super admin dashboard
+  - [/publisher_dashboard.php](file:///C:/xampp/htdocs/tracking/publisher_dashboard.php) - Publisher dashboard
 
-3. **Campaign URLs**
-   - When a campaign is created, a short URL is automatically generated
-   - Example: https://yourdomain.com/p5
-   - These URLs automatically track clicks and redirect to the original URL
+- **Campaign Tracking**:
+  - Short URLs in the format: `http://yourdomain.com/{shortcode}`
+  - Processed by [redirect.php](file:///C:/xampp/htdocs/tracking/redirect.php)
 
-## Cron Job
+## User Roles
 
-Set up a daily cron job to automatically update expired campaigns:
+1. **Super Admin**:
+   - Full access to all platform features
+   - Can manage admins, advertisers, publishers, and campaigns
+   - Access to comprehensive analytics and reports
 
-```bash
-0 0 * * * /usr/bin/php /path/to/your/site/cron_update_expired.php
-```
+2. **Admin**:
+   - Manage campaigns, advertisers, and publishers
+   - View analytics and reports
+   - Cannot manage other admins
 
-## File Structure
+3. **Publisher**:
+   - View assigned campaigns
+   - Track campaign performance
+   - Limited to their own campaign data
 
-```
-ads-platforms/
-├── admin/                 # Admin panel files
-│   ├── dashboard.php
-│   ├── advertisers.php
-│   └── campaigns.php
-├── super_admin/           # Super Admin panel files
-│   ├── dashboard.php
-│   ├── advertisers.php
-│   ├── campaigns.php
-│   └── admins.php
-├── .htaccess              # URL rewriting rules
-├── config.php             # Database configuration
-├── database.sql           # Database schema
-├── login.php              # Login page
-├── logout.php             # Logout functionality
-├── redirect.php           # URL redirect and tracking
-├── cron_update_expired.php # Cron job script
-└── README.md              # This file
-```
+## Security
 
-## Security Notes
+- Passwords are hashed using PHP's `password_hash()`
+- Session-based authentication
+- Role-based access control
+- Prepared statements to prevent SQL injection
+- Input validation on all forms
 
-- Always change the default super admin password after installation
-- Use HTTPS in production environments
-- Regularly update and patch your server software
-- Implement additional security measures as needed for your environment
+## Troubleshooting
+
+- If short URLs don't work, ensure mod_rewrite is enabled in Apache
+- Check that the [.env](file:///C:/xampp/htdocs/tracking/.env) file has correct database credentials
+- Verify that all required PHP extensions are installed

@@ -1,121 +1,132 @@
 <?php
-// Load environment variables from .env file
-$env_file = __DIR__ . '/.env';
+// install.php - Database installation script
 
-if (file_exists($env_file)) {
-    $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
-            list($key, $value) = explode('=', $line, 2);
-            $_ENV[trim($key)] = trim($value);
-        }
-    }
-}
-
-// Application environment
-$app_env = $_ENV['APP_ENV'] ?? 'local';
-$app_debug = $_ENV['APP_DEBUG'] ?? 'true';
-$app_url = $_ENV['APP_URL'] ?? 'http://localhost';
+// Load environment variables
+$env = parse_ini_file('.env');
 
 // Database configuration
-$host = $_ENV['DB_HOST'] ?? 'localhost';
-$dbname = $_ENV['DB_DATABASE'] ?? 'ads_platform'; // Updated to match database.sql
-$username = $_ENV['DB_USERNAME'] ?? 'root';
-$password = $_ENV['DB_PASSWORD'] ?? '';
-$port = $_ENV['DB_PORT'] ?? '3308'; // Updated default port
+$host = $env['DB_HOST'];
+$port = $env['DB_PORT'];
+$dbname = $env['DB_DATABASE'];
+$username = $env['DB_USERNAME'];
+$password = $env['DB_PASSWORD'];
 
 try {
-    // Connect to MySQL
-    $pdo = new PDO("mysql:host=$host;port=$port", $username, $password);
+    // Connect to MySQL server (without specifying database)
+    $pdo = new PDO("mysql:host=$host;port=$port;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Create database
+    // Create database if it doesn't exist
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbname`");
-    echo "Database '$dbname' created successfully<br>";
+    echo "Database '$dbname' created or already exists.\n";
     
-    // Use the database
-    $pdo->exec("USE `$dbname`");
+    // Connect to the specific database
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Create tables based on database.sql
-    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        username VARCHAR(50) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        role ENUM('super_admin', 'admin') NOT NULL DEFAULT 'admin',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id)
-    )");
+    // Create users table
+    $sql = "CREATE TABLE IF NOT EXISTS `users` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `username` VARCHAR(50) UNIQUE NOT NULL,
+        `password` VARCHAR(255) NOT NULL,
+        `role` ENUM('super_admin', 'admin', 'publisher') NOT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sql);
+    echo "Table 'users' created.\n";
     
-    $pdo->exec("CREATE TABLE IF NOT EXISTS advertisers (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id)
-    )");
+    // Create advertisers table
+    $sql = "CREATE TABLE IF NOT EXISTS `advertisers` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `name` VARCHAR(100) NOT NULL,
+        `email` VARCHAR(100) UNIQUE NOT NULL,
+        `company` VARCHAR(100),
+        `phone` VARCHAR(20),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sql);
+    echo "Table 'advertisers' created.\n";
     
-    $pdo->exec("CREATE TABLE IF NOT EXISTS publishers (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id)
-    )");
+    // Create publishers table
+    $sql = "CREATE TABLE IF NOT EXISTS `publishers` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `name` VARCHAR(100) NOT NULL,
+        `email` VARCHAR(100) UNIQUE NOT NULL,
+        `website` VARCHAR(255),
+        `phone` VARCHAR(20),
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sql);
+    echo "Table 'publishers' created.\n";
     
-    $pdo->exec("CREATE TABLE IF NOT EXISTS campaigns (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        campaign_name VARCHAR(100) NOT NULL,
-        advertiser_id INT(11) NOT NULL,
-        publisher_id INT(11),
-        start_date DATE NOT NULL,
-        end_date DATE NOT NULL,
-        advertiser_payout DECIMAL(10,2) NOT NULL,
-        publisher_payout DECIMAL(10,2) NOT NULL,
-        type ENUM('CPR', 'CPL', 'CPC', 'CPM', 'CPS', 'None') NOT NULL DEFAULT 'None',
-        website_url TEXT NOT NULL,
-        short_code VARCHAR(20) NOT NULL UNIQUE,
-        clicks INT(11) NOT NULL DEFAULT 0,
-        status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
-        target_leads INT(11) DEFAULT 0,
-        validated_leads INT(11) DEFAULT 0,
-        total_amount DECIMAL(10,2) DEFAULT 0.00,
-        advertiser_payment_status ENUM('pending', 'completed') DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (advertiser_id) REFERENCES advertisers(id) ON DELETE CASCADE,
-        FOREIGN KEY (publisher_id) REFERENCES publishers(id) ON DELETE SET NULL
-    )");
+    // Create campaigns table
+    $sql = "CREATE TABLE IF NOT EXISTS `campaigns` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `name` VARCHAR(100) NOT NULL,
+        `shortcode` VARCHAR(20) UNIQUE NOT NULL,
+        `target_url` TEXT NOT NULL,
+        `start_date` DATE NOT NULL,
+        `end_date` DATE NOT NULL,
+        `advertiser_payout` DECIMAL(10, 2) DEFAULT 0.00,
+        `publisher_payout` DECIMAL(10, 2) DEFAULT 0.00,
+        `campaign_type` ENUM('CPR', 'CPL', 'CPC', 'CPM', 'CPS', 'None') DEFAULT 'None',
+        `target_leads` INT DEFAULT 0,
+        `validated_leads` INT DEFAULT 0,
+        `click_count` INT DEFAULT 0,
+        `status` ENUM('active', 'inactive') DEFAULT 'active',
+        `payment_status` ENUM('pending', 'completed') DEFAULT 'pending',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )";
+    $pdo->exec($sql);
+    echo "Table 'campaigns' created.\n";
     
-    $pdo->exec("CREATE TABLE IF NOT EXISTS campaign_advertisers (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        campaign_id INT(11) NOT NULL,
-        advertiser_id INT(11) NOT NULL,
-        PRIMARY KEY (id),
-        FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
-        FOREIGN KEY (advertiser_id) REFERENCES advertisers(id) ON DELETE CASCADE,
-        UNIQUE KEY unique_campaign_advertiser (campaign_id, advertiser_id)
-    )");
+    // Create campaign_advertisers junction table
+    $sql = "CREATE TABLE IF NOT EXISTS `campaign_advertisers` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `campaign_id` INT NOT NULL,
+        `advertiser_id` INT NOT NULL,
+        `assigned_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (`campaign_id`) REFERENCES `campaigns`(`id`) ON DELETE CASCADE,
+        FOREIGN KEY (`advertiser_id`) REFERENCES `advertisers`(`id`) ON DELETE CASCADE,
+        UNIQUE KEY `unique_campaign_advertiser` (`campaign_id`, `advertiser_id`)
+    )";
+    $pdo->exec($sql);
+    echo "Table 'campaign_advertisers' created.\n";
     
-    $pdo->exec("CREATE TABLE IF NOT EXISTS campaign_publishers (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        campaign_id INT(11) NOT NULL,
-        publisher_id INT(11) NOT NULL,
-        PRIMARY KEY (id),
-        FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
-        FOREIGN KEY (publisher_id) REFERENCES publishers(id) ON DELETE CASCADE,
-        UNIQUE KEY unique_campaign_publisher (campaign_id, publisher_id)
-    )");
+    // Create campaign_publishers junction table
+    $sql = "CREATE TABLE IF NOT EXISTS `campaign_publishers` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `campaign_id` INT NOT NULL,
+        `publisher_id` INT NOT NULL,
+        `assigned_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (`campaign_id`) REFERENCES `campaigns`(`id`) ON DELETE CASCADE,
+        FOREIGN KEY (`publisher_id`) REFERENCES `publishers`(`id`) ON DELETE CASCADE,
+        UNIQUE KEY `unique_campaign_publisher` (`campaign_id`, `publisher_id`)
+    )";
+    $pdo->exec($sql);
+    echo "Table 'campaign_publishers' created.\n";
     
-    // Insert default admin user
-    $stmt = $pdo->prepare("INSERT IGNORE INTO users (username, password, role) VALUES (?, ?, ?)");
-    $hashedPassword = password_hash('Agondigital@2020', PASSWORD_DEFAULT);
-    $stmt->execute(['admin', $hashedPassword, 'super_admin']);
+    // Create default super admin user
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM `users` WHERE `username` = ?");
+    $stmt->execute(['admin']);
+    $count = $stmt->fetchColumn();
     
-    echo "Tables created successfully<br>";
-    echo "<br>Installation completed successfully!<br>";
-    echo "<a href='/'>Go to Ad Campaign Platform</a>";
+    if ($count == 0) {
+        $hashedPassword = password_hash('Agondigital@2020', PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO `users` (`username`, `password`, `role`) VALUES (?, ?, ?)");
+        $stmt->execute(['admin', $hashedPassword, 'super_admin']);
+        echo "Default super admin user created.\n";
+    } else {
+        echo "Super admin user already exists.\n";
+    }
     
-} catch(PDOException $e) {
-    echo "Error: " . $e->getMessage();
+    echo "\nInstallation completed successfully!\n";
+    echo "Default login credentials:\n";
+    echo "Username: admin\n";
+    echo "Password: Agondigital@2020\n";
+    
+} catch (PDOException $e) {
+    die("Database installation failed: " . $e->getMessage());
 }
 ?>

@@ -1,65 +1,119 @@
 <?php
-require_once 'config.php';
+// redirect.php - Handles short URL redirects and tracks clicks
+require_once 'db_connection.php';
 
-// Get the short code from the URL
-$short_code = $_GET['p'] ?? '';
+// Get the shortcode and publisher ID from the URL parameters
+$short_code = $_GET['code'] ?? '';
+$publisher_id = $_GET['pub'] ?? '';
 
-// If no short code from query parameter, try to get it from the path
-if (empty($short_code)) {
-    $request_uri = $_SERVER['REQUEST_URI'];
-    $path = parse_url($request_uri, PHP_URL_PATH);
-    $path_parts = explode('/', trim($path, '/'));
-    $last_part = end($path_parts);
-    
-    // Check if it matches our pattern (p followed by numbers)
-    if (preg_match('/^[pP]\d+$/', $last_part)) {
-        $short_code = $last_part;
+// If no publisher ID, check if this is a publisher-specific short code
+if (empty($publisher_id) && !empty($short_code)) {
+    try {
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        
+        // Check if this is a publisher-specific short code
+        $stmt = $conn->prepare("
+            SELECT c.target_url, psc.publisher_id, psc.campaign_id
+            FROM publisher_short_codes psc
+            JOIN campaigns c ON psc.campaign_id = c.id
+            WHERE psc.short_code = ? AND c.status = 'active'
+        ");
+        $stmt->execute([$short_code]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            $publisher_id = $result['publisher_id'];
+            // Update click count for this publisher's link
+            $stmt = $conn->prepare("UPDATE publisher_short_codes SET clicks = clicks + 1 WHERE short_code = ?");
+            $stmt->execute([$short_code]);
+            
+            // Update total click count for the campaign
+            $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = ?");
+            $stmt->execute([$result['campaign_id']]);
+            
+            // Redirect to the target URL
+            header("Location: " . $result['target_url'], true, 302);
+            exit();
+        }
+    } catch (PDOException $e) {
+        http_response_code(500);
+        die("Server Error: " . $e->getMessage());
     }
 }
 
-if (empty($short_code)) {
-    die("Invalid link");
+// Handle the standard format with publisher ID parameter
+if (empty($short_code) || empty($publisher_id)) {
+    http_response_code(400);
+    die('Bad Request: Missing parameters');
 }
 
-// Get the campaign with the short code
-$stmt = $conn->prepare("SELECT * FROM campaigns WHERE short_code = ?");
-$stmt->bind_param("s", $short_code);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows == 0) {
-    die("Campaign not found");
-}
-
-$campaign = $result->fetch_assoc();
-
-// Check if campaign is active
-if ($campaign['status'] != 'active') {
-    die("This campaign is inactive.");
-}
-
-// Check if today's date is between start and end dates
-$today = date('Y-m-d');
-if ($today < $campaign['start_date'] || $today > $campaign['end_date']) {
-    // Update campaign status to inactive if it's expired
-    $stmt = $conn->prepare("UPDATE campaigns SET status = 'inactive' WHERE id = ?");
-    $stmt->bind_param("i", $campaign['id']);
-    $stmt->execute();
-    $stmt->close();
+try {
+    $db = Database::getInstance();
+    $conn = $db->getConnection();
     
-    die("This campaign has expired.");
+    // Find the campaign and publisher details
+    $stmt = $conn->prepare("
+        SELECT c.target_url, cp.id as campaign_publisher_id
+        FROM campaigns c 
+        JOIN campaign_publishers cp ON c.id = cp.campaign_id 
+        WHERE c.shortcode = ? AND cp.publisher_id = ? AND c.status = 'active'
+    ");
+    $stmt->execute([$short_code, $publisher_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$result) {
+        // Check if this is a publisher-specific short code
+        $stmt = $conn->prepare("
+            SELECT c.target_url, psc.id as publisher_short_code_id
+            FROM publisher_short_codes psc
+            JOIN campaigns c ON psc.campaign_id = c.id
+            WHERE psc.short_code = ? AND psc.publisher_id = ? AND c.status = 'active'
+        ");
+        $stmt->execute([$short_code, $publisher_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$result) {
+            http_response_code(404);
+            die('Invalid link!');
+        }
+        
+        // Update click count for publisher-specific short code
+        $stmt = $conn->prepare("UPDATE publisher_short_codes SET clicks = clicks + 1 WHERE short_code = ? AND publisher_id = ?");
+        $stmt->execute([$short_code, $publisher_id]);
+        
+        // Update total click count for the campaign
+        $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = (SELECT campaign_id FROM publisher_short_codes WHERE short_code = ? AND publisher_id = ?)");
+        $stmt->execute([$short_code, $publisher_id]);
+    } else {
+        // Update click count for campaign_publisher link
+        $stmt = $conn->prepare("UPDATE campaign_publishers SET clicks = clicks + 1 WHERE id = ?");
+        $stmt->execute([$result['campaign_publisher_id']]);
+        
+        // Update total click count for the campaign
+        $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = (SELECT campaign_id FROM campaign_publishers WHERE id = ?)");
+        $stmt->execute([$result['campaign_publisher_id']]);
+    }
+    
+    // Check if campaign is within date range
+    $stmt = $conn->prepare("SELECT start_date, end_date FROM campaigns WHERE shortcode = ?");
+    $stmt->execute([$short_code]);
+    $campaign = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($campaign) {
+        $current_date = date('Y-m-d');
+        if ($current_date < $campaign['start_date'] || $current_date > $campaign['end_date']) {
+            http_response_code(404);
+            die('Campaign is not active on this date');
+        }
+    }
+    
+    // Redirect to the target URL
+    header("Location: " . $result['target_url'], true, 302);
+    exit();
+    
+} catch (PDOException $e) {
+    http_response_code(500);
+    die("Server Error: " . $e->getMessage());
 }
-
-// Increment click count
-$stmt = $conn->prepare("UPDATE campaigns SET clicks = clicks + 1 WHERE id = ?");
-$stmt->bind_param("i", $campaign['id']);
-$stmt->execute();
-$stmt->close();
-
-// Get advertiser ID from query parameter if provided
-$advertiser_id = $_GET['aid'] ?? null;
-
-// Redirect to the original URL
-header("Location: " . $campaign['website_url']);
-exit();
 ?>

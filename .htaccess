@@ -1,12 +1,15 @@
 RewriteEngine On
 
-# Redirect short URLs to redirect.php
+# Redirect short URLs to redirect.php with publisher parameter
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([pP][0-9]+)$ redirect.php?p=$1 [L,QSA]
+RewriteRule ^c/([A-Za-z0-9]+)/([A-Za-z0-9]+)$ redirect.php?code=$1&pub=$2 [L,QSA]
 
-# Redirect root to main page
-RewriteRule ^$ index.php [L]
+# Redirect publisher-specific short codes to redirect.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^c/([A-Za-z0-9]+)$ redirect.php?code=$1 [L,QSA]
 
-# Custom error pages
-ErrorDocument 404 /error.php
+# Handle trailing slash for directories
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^(.+?)/$ $1 [L,R=301]

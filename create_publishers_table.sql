@@ -1,8 +1,0 @@
-USE ads_platform;
-CREATE TABLE IF NOT EXISTS publishers (
-    id INT(11) NOT NULL AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);

@@ -1,9 +1,9 @@
 <?php
-// super_admin/campaigns.php - Campaigns Management
+// admin/manage_campaigns.php - Manage campaigns
 session_start();
 
-// Check if user is logged in and is a super admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
+// Check if user is logged in and is an admin
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: ../login.php');
     exit();
 }
@@ -14,35 +14,35 @@ require_once '../db_connection.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
     $campaign_id = $_POST['campaign_id'] ?? '';
     $status = $_POST['status'] ?? '';
-    
+        
     if (!empty($campaign_id) && in_array($status, ['active', 'inactive'])) {
         try {
             $db = Database::getInstance();
             $conn = $db->getConnection();
-            
+                
             $stmt = $conn->prepare("UPDATE campaigns SET status = ? WHERE id = ?");
             $stmt->execute([$status, $campaign_id]);
-            
+                
             $success = "Campaign status updated successfully.";
         } catch (PDOException $e) {
             $error = "Error updating campaign status: " . $e->getMessage();
         }
     }
 }
-
+    
 // Handle campaign deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
     $campaign_id = $_POST['campaign_id'] ?? '';
-    
+        
     if (!empty($campaign_id)) {
         try {
             $db = Database::getInstance();
             $conn = $db->getConnection();
-            
+                
             // Delete campaign (cascading will remove related records)
             $stmt = $conn->prepare("DELETE FROM campaigns WHERE id = ?");
             $stmt->execute([$campaign_id]);
-            
+                
             $success = "Campaign deleted successfully.";
         } catch (PDOException $e) {
             $error = "Error deleting campaign: " . $e->getMessage();
@@ -50,7 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Get all campaigns with advertiser and publisher information
+
+// Get all campaigns
 try {
     $db = Database::getInstance();
     $conn = $db->getConnection();
@@ -88,7 +89,7 @@ try {
         <div class="container">
             <a class="navbar-brand" href="#">Ads Platform</a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?> (Super Admin)</span>
+                <span class="navbar-text me-3">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?> (<?php echo ucfirst($_SESSION['role']); ?>)</span>
                 <a class="nav-link btn btn-outline-light" href="../logout.php">Logout</a>
             </div>
         </div>
@@ -102,14 +103,9 @@ try {
                         <h5>Navigation</h5>
                     </div>
                     <div class="list-group list-group-flush">
-                        <a href="dashboard.php" class="list-group-item list-group-item-action">Home Dashboard</a>
-                        <a href="campaigns.php" class="list-group-item list-group-item-action active">Campaigns</a>
-                        <a href="advertisers.php" class="list-group-item list-group-item-action">Advertisers</a>
-                        <a href="publishers.php" class="list-group-item list-group-item-action">Publishers</a>
-                        <a href="admins.php" class="list-group-item list-group-item-action">Admins</a>
-                        <a href="advertiser_campaigns.php" class="list-group-item list-group-item-action">View Advertiser Campaigns</a>
-                        <a href="publisher_campaigns.php" class="list-group-item list-group-item-action">View Publisher Campaigns</a>
-                        <a href="payment_reports.php" class="list-group-item list-group-item-action">Payment Reports</a>
+                        <a href="dashboard.php" class="list-group-item list-group-item-action">Dashboard</a>
+                        <a href="manage_campaigns.php" class="list-group-item list-group-item-action active">Campaigns</a>
+                        <a href="manage_publishers.php" class="list-group-item list-group-item-action">Manage Publishers</a>
                     </div>
                 </div>
             </div>
@@ -117,7 +113,7 @@ try {
             <div class="col-md-9">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2>All Campaigns</h2>
-                    <a href="add_campaign.php" class="btn btn-primary">Add New Campaign</a>
+                    <a href="create_campaign.php" class="btn btn-primary">Add New Campaign</a>
                 </div>
                 
                 <?php if (isset($error)): ?>
@@ -131,7 +127,7 @@ try {
                 <div class="card">
                     <div class="card-body">
                         <?php if (empty($campaigns)): ?>
-                            <p>No campaigns found. <a href="add_campaign.php">Create your first campaign</a>.</p>
+                            <p>No campaigns found. <a href="create_campaign.php">Create your first campaign</a>.</p>
                         <?php else: ?>
                             <div class="table-responsive">
                                 <table class="table table-striped">

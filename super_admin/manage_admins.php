@@ -1,5 +1,5 @@
 <?php
-// super_admin/admins.php - Manage Admins
+// super_admin/manage_admins.php - Manage admins (super admin only)
 session_start();
 
 // Check if user is logged in and is a super admin
@@ -83,7 +83,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admins - Ads Platform</title>
+    <title>Manage Admins - Ads Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -105,21 +105,19 @@ try {
                         <h5>Navigation</h5>
                     </div>
                     <div class="list-group list-group-flush">
-                        <a href="dashboard.php" class="list-group-item list-group-item-action">Home Dashboard</a>
-                        <a href="campaigns.php" class="list-group-item list-group-item-action">Campaigns</a>
-                        <a href="advertisers.php" class="list-group-item list-group-item-action">Advertisers</a>
-                        <a href="publishers.php" class="list-group-item list-group-item-action">Publishers</a>
-                        <a href="admins.php" class="list-group-item list-group-item-action active">Admins</a>
-                        <a href="advertiser_campaigns.php" class="list-group-item list-group-item-action">View Advertiser Campaigns</a>
-                        <a href="publisher_campaigns.php" class="list-group-item list-group-item-action">View Publisher Campaigns</a>
-                        <a href="payment_reports.php" class="list-group-item list-group-item-action">Payment Reports</a>
+                        <a href="dashboard.php" class="list-group-item list-group-item-action">Dashboard</a>
+                        <a href="manage_campaigns.php" class="list-group-item list-group-item-action">Manage Campaigns</a>
+                        <a href="manage_advertisers.php" class="list-group-item list-group-item-action">Manage Advertisers</a>
+                        <a href="manage_publishers.php" class="list-group-item list-group-item-action">Manage Publishers</a>
+                        <a href="manage_admins.php" class="list-group-item list-group-item-action active">Manage Admins</a>
+                        <a href="reports.php" class="list-group-item list-group-item-action">Reports</a>
                     </div>
                 </div>
             </div>
             
             <div class="col-md-9">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Admins</h2>
+                    <h2>Manage Admins</h2>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAdminModal">Add New Admin</button>
                 </div>
                 
@@ -140,17 +138,15 @@ try {
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-<th>Username</th>
-<th>Role</th>
-<th>Created At</th>
-<th>Actions</th>
+                                            <th>Username</th>
+                                            <th>Role</th>
+                                            <th>Created At</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($admins as $admin): ?>
                                             <tr>
-                                                <td><?php echo htmlspecialchars($admin['id']); ?></td>
                                                 <td><?php echo htmlspecialchars($admin['username']); ?></td>
                                                 <td>
                                                     <?php if ($admin['role'] === 'super_admin'): ?>

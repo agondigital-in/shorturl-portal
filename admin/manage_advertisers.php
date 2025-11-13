@@ -1,9 +1,9 @@
 <?php
-// super_admin/advertisers.php - Manage Advertisers
+// admin/manage_advertisers.php - Manage advertisers
 session_start();
 
-// Check if user is logged in and is a super admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
+// Check if user is logged in and is an admin
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: ../login.php');
     exit();
 }
@@ -38,24 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle advertiser deletion
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
-    $advertiser_id = $_POST['advertiser_id'] ?? '';
-    
-    if (!empty($advertiser_id)) {
-        try {
-            $db = Database::getInstance();
-            $conn = $db->getConnection();
-            
-            $stmt = $conn->prepare("DELETE FROM advertisers WHERE id = ?");
-            $stmt->execute([$advertiser_id]);
-            
-            $success = "Advertiser deleted successfully.";
-        } catch (PDOException $e) {
-            $error = "Error deleting advertiser: " . $e->getMessage();
-        }
-    }
-}
 
 // Get all advertisers
 try {
@@ -76,7 +58,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advertisers - Ads Platform</title>
+    <title>Manage Advertisers - Ads Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -84,7 +66,7 @@ try {
         <div class="container">
             <a class="navbar-brand" href="#">Ads Platform</a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?> (Super Admin)</span>
+                <span class="navbar-text me-3">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?> (<?php echo ucfirst($_SESSION['role']); ?>)</span>
                 <a class="nav-link btn btn-outline-light" href="../logout.php">Logout</a>
             </div>
         </div>
@@ -98,21 +80,16 @@ try {
                         <h5>Navigation</h5>
                     </div>
                     <div class="list-group list-group-flush">
-                        <a href="dashboard.php" class="list-group-item list-group-item-action">Home Dashboard</a>
-                        <a href="campaigns.php" class="list-group-item list-group-item-action">Campaigns</a>
-                        <a href="advertisers.php" class="list-group-item list-group-item-action active">Advertisers</a>
-                        <a href="publishers.php" class="list-group-item list-group-item-action">Publishers</a>
-                        <a href="admins.php" class="list-group-item list-group-item-action">Admins</a>
-                        <a href="advertiser_campaigns.php" class="list-group-item list-group-item-action">View Advertiser Campaigns</a>
-                        <a href="publisher_campaigns.php" class="list-group-item list-group-item-action">View Publisher Campaigns</a>
-                        <a href="payment_reports.php" class="list-group-item list-group-item-action">Payment Reports</a>
+                        <a href="dashboard.php" class="list-group-item list-group-item-action">Dashboard</a>
+                        <a href="manage_campaigns.php" class="list-group-item list-group-item-action">Manage Campaigns</a>
+                        <a href="manage_publishers.php" class="list-group-item list-group-item-action">Manage Publishers</a>
                     </div>
                 </div>
             </div>
             
             <div class="col-md-9">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Advertisers</h2>
+                    <h2>Manage Advertisers</h2>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAdvertiserModal">Add New Advertiser</button>
                 </div>
                 
@@ -133,28 +110,22 @@ try {
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-<th>Name</th>
-<th>Email</th>
-<th>Company</th>
-<th>Phone</th>
-<th>Actions</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Company</th>
+                                            <th>Phone</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($advertisers as $advertiser): ?>
                                             <tr>
-                                                <td><?php echo htmlspecialchars($advertiser['id']); ?></td>
                                                 <td><?php echo htmlspecialchars($advertiser['name']); ?></td>
                                                 <td><?php echo htmlspecialchars($advertiser['email']); ?></td>
                                                 <td><?php echo htmlspecialchars($advertiser['company'] ?? 'N/A'); ?></td>
                                                 <td><?php echo htmlspecialchars($advertiser['phone'] ?? 'N/A'); ?></td>
                                                 <td>
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this advertiser?')">
-                                                        <input type="hidden" name="advertiser_id" value="<?php echo $advertiser['id']; ?>">
-                                                        <input type="hidden" name="action" value="delete">
-                                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                                    </form>
+
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
