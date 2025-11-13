@@ -182,7 +182,7 @@ try {
                                                     <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this campaign?')">
                                                         <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
                                                         <input type="hidden" name="action" value="delete">
-                                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                        <!-- <button type="submit" class="btn btn-sm btn-danger">Delete</button> -->
                                                     </form>
                                                 </td>
                                             </tr>
