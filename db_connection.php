@@ -1,38 +1,48 @@
 <?php
-// db_connection.php - Database connection utility
+// Load environment variables from .env file
+$env_file = __DIR__ . '/.env';
 
-class Database {
-    private static $instance = null;
-    private $connection;
-    
-    private function __construct() {
-        // Load environment variables
-        $env = parse_ini_file('.env');
-        
-        // Database configuration
-        $host = $env['DB_HOST'];
-        $port = $env['DB_PORT'];
-        $dbname = $env['DB_DATABASE'];
-        $username = $env['DB_USERNAME'];
-        $password = $env['DB_PASSWORD'];
-        
-        try {
-            $this->connection = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8", $username, $password);
-            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $e) {
-            die("Connection failed: " . $e->getMessage());
+if (file_exists($env_file)) {
+    $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
+            list($key, $value) = explode('=', $line, 2);
+            $_ENV[trim($key)] = trim($value);
         }
-    }
-    
-    public static function getInstance() {
-        if (self::$instance === null) {
-            self::$instance = new Database();
-        }
-        return self::$instance;
-    }
-    
-    public function getConnection() {
-        return $this->connection;
     }
 }
+
+// Application environment
+$app_env = $_ENV['APP_ENV'] ?? 'local';
+$app_debug = $_ENV['APP_DEBUG'] ?? 'true';
+$app_url = $_ENV['APP_URL'] ?? 'http://localhost';
+
+// Database configuration
+$host = $_ENV['DB_HOST'] ?? 'localhost';
+$dbname = $_ENV['DB_DATABASE'] ?? 'tracking';
+$username = $_ENV['DB_USERNAME'] ?? 'root';
+$password = $_ENV['DB_PASSWORD'] ?? '';
+$port = $_ENV['DB_PORT'] ?? '3306';
+
+// PDO connection
+try {
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    // If database doesn't exist, show a friendly message
+    if ($e->getCode() == 1049) {
+        die("Database not found. Please run install.php first or create the database manually.");
+    } else {
+        die("Connection failed: " . $e->getMessage());
+    }
+}
+
+// MySQLi connection (for backward compatibility with existing code)
+$conn = new mysqli($host, $username, $password, $dbname, $port);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
 ?>
