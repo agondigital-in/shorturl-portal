@@ -36,6 +36,21 @@ try {
     $stmt->execute();
     $recent_campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // Get campaign status distribution
+    $stmt = $conn->prepare("SELECT status, COUNT(*) as count FROM campaigns GROUP BY status");
+    $stmt->execute();
+    $campaign_status_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get recent campaign clicks (last 7 days)
+    $stmt = $conn->prepare("SELECT DATE(created_at) as date, SUM(click_count) as clicks FROM campaigns WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) GROUP BY DATE(created_at) ORDER BY date");
+    $stmt->execute();
+    $clicks_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get campaign type distribution
+    $stmt = $conn->prepare("SELECT campaign_type, COUNT(*) as count FROM campaigns GROUP BY campaign_type");
+    $stmt->execute();
+    $campaign_type_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
 } catch (PDOException $e) {
     $error = "Error loading dashboard data: " . $e->getMessage();
 }
@@ -48,78 +63,309 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Dashboard - Ads Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+        .shadow {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">Ads Platform</a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?> (Super Admin)</span>
-                <a class="nav-link btn btn-outline-light" href="../logout.php">Logout</a>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.php">
+                <i class="fas fa-chart-line me-2 text-primary"></i>
+                <span class="fw-bold text-dark">Ads Platform</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item me-3">
+                        <span class="navbar-text">
+                            <i class="fas fa-user-circle me-1"></i>
+                            Welcome, <span class="fw-semibold"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-danger" href="../logout.php">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid mt-4">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Navigation</h5>
-                    </div>
-                    <div class="list-group list-group-flush">
-                        <a href="dashboard.php" class="list-group-item list-group-item-action active">Home Dashboard</a>
-                        <a href="campaigns.php" class="list-group-item list-group-item-action">Campaigns</a>
-                        <a href="advertisers.php" class="list-group-item list-group-item-action">Advertisers</a>
-                        <a href="publishers.php" class="list-group-item list-group-item-action">Publishers</a>
-                        <a href="admins.php" class="list-group-item list-group-item-action">Admins</a>
-                        <a href="advertiser_campaigns.php" class="list-group-item list-group-item-action">View Advertiser Campaigns</a>
-                        <a href="publisher_campaigns.php" class="list-group-item list-group-item-action">View Publisher Campaigns</a>
-                        <a href="payment_reports.php" class="list-group-item list-group-item-action">Payment Reports</a>
-                    </div>
+            <!-- Sidebar -->
+            <div class="col-lg-2 d-none d-lg-block bg-light sidebar p-0">
+                <div class="sidebar-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
+                                <i class="fas fa-home me-2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'campaigns.php' ? 'active' : ''; ?>" href="campaigns.php">
+                                <i class="fas fa-bullhorn me-2"></i>
+                                <span>Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertisers.php' ? 'active' : ''; ?>" href="advertisers.php">
+                                <i class="fas fa-users me-2"></i>
+                                <span>Advertisers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publishers.php' ? 'active' : ''; ?>" href="publishers.php">
+                                <i class="fas fa-share-alt me-2"></i>
+                                <span>Publishers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'admins.php' ? 'active' : ''; ?>" href="admins.php">
+                                <i class="fas fa-user-shield me-2"></i>
+                                <span>Admins</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertiser_campaigns.php' ? 'active' : ''; ?>" href="advertiser_campaigns.php">
+                                <i class="fas fa-ad me-2"></i>
+                                <span>Advertiser Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publisher_campaigns.php' ? 'active' : ''; ?>" href="publisher_campaigns.php">
+                                <i class="fas fa-link me-2"></i>
+                                <span>Publisher Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'payment_reports.php' ? 'active' : ''; ?>" href="payment_reports.php">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>
+                                <span>Payment Reports</span>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
             
-            <div class="col-md-9">
+            <!-- Mobile Sidebar Toggle -->
+            <div class="col-12 d-lg-none bg-light p-2">
+                <button class="btn btn-primary w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
+                    <i class="fas fa-bars me-2"></i>Menu
+                </button>
+            </div>
+            
+            <!-- Mobile Offcanvas Sidebar -->
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+                <div class="offcanvas-header bg-light">
+                    <h5 class="offcanvas-title">Navigation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="offcanvas-body p-0">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
+                                <i class="fas fa-home me-2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'campaigns.php' ? 'active' : ''; ?>" href="campaigns.php">
+                                <i class="fas fa-bullhorn me-2"></i>
+                                <span>Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertisers.php' ? 'active' : ''; ?>" href="advertisers.php">
+                                <i class="fas fa-users me-2"></i>
+                                <span>Advertisers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publishers.php' ? 'active' : ''; ?>" href="publishers.php">
+                                <i class="fas fa-share-alt me-2"></i>
+                                <span>Publishers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'admins.php' ? 'active' : ''; ?>" href="admins.php">
+                                <i class="fas fa-user-shield me-2"></i>
+                                <span>Admins</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertiser_campaigns.php' ? 'active' : ''; ?>" href="advertiser_campaigns.php">
+                                <i class="fas fa-ad me-2"></i>
+                                <span>Advertiser Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publisher_campaigns.php' ? 'active' : ''; ?>" href="publisher_campaigns.php">
+                                <i class="fas fa-link me-2"></i>
+                                <span>Publisher Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'payment_reports.php' ? 'active' : ''; ?>" href="payment_reports.php">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>
+                                <span>Payment Reports</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <main class="col-lg-10 ms-sm-auto px-md-4 py-3">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h1 class="h3 mb-0 text-dark">Dashboard</h1>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
                 <h2>Dashboard Overview</h2>
                 
                 <?php if (isset($error)): ?>
                     <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
                 
-                <div class="row">
+                <!-- Summary Cards -->
+                <div class="row mb-4">
                     <div class="col-md-3 mb-3">
-                        <div class="card text-white bg-primary">
+                        <div class="card text-white bg-primary shadow">
                             <div class="card-body">
-                                <h5 class="card-title"><?php echo $campaigns_count; ?></h5>
-                                <p class="card-text">Campaigns</p>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title"><?php echo $campaigns_count; ?></h5>
+                                        <p class="card-text">Campaigns</p>
+                                    </div>
+                                    <div class="icon-circle bg-white text-primary">
+                                        <i class="fas fa-bullhorn"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="col-md-3 mb-3">
-                        <div class="card text-white bg-success">
+                        <div class="card text-white bg-success shadow">
                             <div class="card-body">
-                                <h5 class="card-title"><?php echo $advertisers_count; ?></h5>
-                                <p class="card-text">Advertisers</p>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title"><?php echo $advertisers_count; ?></h5>
+                                        <p class="card-text">Advertisers</p>
+                                    </div>
+                                    <div class="icon-circle bg-white text-success">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="col-md-3 mb-3">
-                        <div class="card text-white bg-info">
+                        <div class="card text-white bg-info shadow">
                             <div class="card-body">
-                                <h5 class="card-title"><?php echo $publishers_count; ?></h5>
-                                <p class="card-text">Publishers</p>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title"><?php echo $publishers_count; ?></h5>
+                                        <p class="card-text">Publishers</p>
+                                    </div>
+                                    <div class="icon-circle bg-white text-info">
+                                        <i class="fas fa-share-alt"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="col-md-3 mb-3">
-                        <div class="card text-white bg-warning">
+                        <div class="card text-white bg-warning shadow">
                             <div class="card-body">
-                                <h5 class="card-title"><?php echo $admins_count; ?></h5>
-                                <p class="card-text">Admins</p>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title"><?php echo $admins_count; ?></h5>
+                                        <p class="card-text">Admins</p>
+                                    </div>
+                                    <div class="icon-circle bg-white text-warning">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5>Campaign Status Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="campaignStatusChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5>Campaign Type Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="campaignTypeChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5>Recent Campaign Clicks (Last 7 Days)</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="clicksChart" height="100"></canvas>
                             </div>
                         </div>
                     </div>
@@ -164,10 +410,97 @@ try {
                         <?php endif; ?>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Campaign Status Chart
+        document.addEventListener('DOMContentLoaded', function() {
+            var ctx1 = document.getElementById('campaignStatusChart').getContext('2d');
+            var campaignStatusChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: [<?php echo implode(',', array_map(function($item) { return "'" . ucfirst($item['status']) . "'"; }, $campaign_status_data)); ?>],
+                    datasets: [{
+                        data: [<?php echo implode(',', array_column($campaign_status_data, 'count')); ?>],
+                        backgroundColor: [
+                            '#28a745',
+                            '#dc3545',
+                            '#ffc107'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+            
+            // Campaign Type Chart
+            var ctx2 = document.getElementById('campaignTypeChart').getContext('2d');
+            var campaignTypeChart = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: [<?php echo implode(',', array_map(function($item) { return "'" . ($item['campaign_type'] === 'None' ? 'Not Set' : $item['campaign_type']) . "'"; }, $campaign_type_data)); ?>],
+                    datasets: [{
+                        data: [<?php echo implode(',', array_column($campaign_type_data, 'count')); ?>],
+                        backgroundColor: [
+                            '#007bff',
+                            '#28a745',
+                            '#ffc107',
+                            '#dc3545',
+                            '#6f42c1',
+                            '#17a2b8'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+            
+            // Clicks Chart
+            var ctx3 = document.getElementById('clicksChart').getContext('2d');
+            var clicksChart = new Chart(ctx3, {
+                type: 'line',
+                data: {
+                    labels: [<?php echo implode(',', array_map(function($item) { return "'" . date('M d', strtotime($item['date'])) . "'"; }, $clicks_data)); ?>],
+                    datasets: [{
+                        label: 'Total Clicks',
+                        data: [<?php echo implode(',', array_column($clicks_data, 'clicks')); ?>],
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
