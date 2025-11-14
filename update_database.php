@@ -12,6 +12,7 @@ try {
         `campaign_id` INT NOT NULL,
         `publisher_id` INT NOT NULL,
         `short_code` VARCHAR(20) UNIQUE NOT NULL,
+        `clicks` INT DEFAULT 0,
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (`campaign_id`) REFERENCES `campaigns`(`id`) ON DELETE CASCADE,
         FOREIGN KEY (`publisher_id`) REFERENCES `publishers`(`id`) ON DELETE CASCADE,

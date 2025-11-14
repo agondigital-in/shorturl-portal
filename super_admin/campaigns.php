@@ -146,6 +146,8 @@ try {
                                             <th>Type</th>
                                             <th>Base Short Code</th>
                                             <th>Clicks</th>
+                                            <th>Adv. Payout</th>
+                                            <th>Pub. Payout</th>
                                             <th>Status</th>
                                             <th>Payment Status</th>
                                             <th>Actions</th>
@@ -163,6 +165,8 @@ try {
                                                 <td><?php echo htmlspecialchars($campaign['campaign_type']); ?></td>
                                                 <td><?php echo htmlspecialchars($campaign['shortcode']); ?></td>
                                                 <td><?php echo $campaign['click_count']; ?></td>
+                                                <td>$<?php echo number_format($campaign['advertiser_payout'], 2); ?></td>
+                                                <td>$<?php echo number_format($campaign['publisher_payout'], 2); ?></td>
                                                 <td>
                                                     <span class="badge bg-<?php echo $campaign['status'] === 'active' ? 'success' : 'secondary'; ?>">
                                                         <?php echo ucfirst($campaign['status']); ?>
@@ -175,6 +179,7 @@ try {
                                                 </td>
                                                 <td>
                                                     <a href="campaign_tracking_stats.php?id=<?php echo $campaign['id']; ?>" class="btn btn-sm btn-info">Tracking Stats</a>
+                                                    <a href="edit_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
                                                     <form method="POST" class="d-inline">
                                                         <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
                                                         <input type="hidden" name="action" value="update_status">
