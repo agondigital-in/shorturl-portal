@@ -356,8 +356,8 @@ try {
                                                 <td><?php echo htmlspecialchars($campaign['campaign_type']); ?></td>
                                                 <td><?php echo htmlspecialchars($campaign['shortcode']); ?></td>
                                                 <td><?php echo $campaign['click_count']; ?></td>
-                                                <td>$<?php echo number_format($campaign['advertiser_payout'], 2); ?></td>
-                                                <td>$<?php echo number_format($campaign['publisher_payout'], 2); ?></td>
+                                                <td>₹<?php echo number_format($campaign['advertiser_payout'], 2); ?></td>
+                                                <td>₹<?php echo number_format($campaign['publisher_payout'], 2); ?></td>
                                                 <td>
                                                     <span class="badge bg-<?php echo $campaign['status'] === 'active' ? 'success' : 'secondary'; ?>">
                                                         <?php echo ucfirst($campaign['status']); ?>
