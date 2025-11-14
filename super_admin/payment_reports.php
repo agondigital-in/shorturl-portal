@@ -59,15 +59,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Get filter parameter
+// Get filter parameters
 $filter_status = $_GET['status'] ?? 'all';
+$filter_date_type = $_GET['date_type'] ?? '';
+$filter_date_value = $_GET['date_value'] ?? '';
 
 // Get payment report data
 try {
     $db = Database::getInstance();
     $conn = $db->getConnection();
     
-    // Build query based on filter
+    // Build query based on filters
     $sql = "
         SELECT 
             c.id,
@@ -82,6 +84,7 @@ try {
             c.payment_status,
             c.start_date,
             c.end_date,
+            c.created_at,
             GROUP_CONCAT(DISTINCT a.name) as advertiser_names,
             GROUP_CONCAT(DISTINCT p.name) as publisher_names
         FROM campaigns c
@@ -91,16 +94,42 @@ try {
         LEFT JOIN publishers p ON cp.publisher_id = p.id
         ";
     
-    // Add filter condition if needed
+    // Add filter conditions
+    $where_conditions = [];
+    $params = [];
+    
     if ($filter_status !== 'all') {
-        $sql .= " WHERE c.payment_status = ? ";
+        $where_conditions[] = "c.payment_status = ?";
+        $params[] = $filter_status;
+    }
+    
+    // Add date filter conditions
+    if (!empty($filter_date_type) && !empty($filter_date_value)) {
+        switch ($filter_date_type) {
+            case 'day':
+                $where_conditions[] = "DATE(c.created_at) = ?";
+                $params[] = $filter_date_value;
+                break;
+            case 'month':
+                $where_conditions[] = "DATE_FORMAT(c.created_at, '%Y-%m') = ?";
+                $params[] = $filter_date_value;
+                break;
+            case 'year':
+                $where_conditions[] = "YEAR(c.created_at) = ?";
+                $params[] = $filter_date_value;
+                break;
+        }
+    }
+    
+    if (!empty($where_conditions)) {
+        $sql .= " WHERE " . implode(' AND ', $where_conditions);
     }
     
     $sql .= " GROUP BY c.id ORDER BY c.created_at DESC ";
     
     $stmt = $conn->prepare($sql);
-    if ($filter_status !== 'all') {
-        $stmt->execute([$filter_status]);
+    if (!empty($params)) {
+        $stmt->execute($params);
     } else {
         $stmt->execute();
     }
@@ -205,14 +234,28 @@ try {
                             <div class="card-body">
                                 <h5 class="card-title">Filter Campaigns</h5>
                                 <form method="GET" class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3 mb-3">
                                         <select name="status" class="form-select">
                                             <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>All Statuses</option>
                                             <option value="pending" <?php echo $filter_status === 'pending' ? 'selected' : ''; ?>>Pending Payments</option>
                                             <option value="completed" <?php echo $filter_status === 'completed' ? 'selected' : ''; ?>>Completed Payments</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    
+                                    <div class="col-md-3 mb-3">
+                                        <select name="date_type" class="form-select">
+                                            <option value="" <?php echo empty($filter_date_type) ? 'selected' : ''; ?>>Select Date Filter</option>
+                                            <option value="day" <?php echo $filter_date_type === 'day' ? 'selected' : ''; ?>>Day-wise</option>
+                                            <option value="month" <?php echo $filter_date_type === 'month' ? 'selected' : ''; ?>>Month-wise</option>
+                                            <option value="year" <?php echo $filter_date_type === 'year' ? 'selected' : ''; ?>>Year-wise</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-3 mb-3">
+                                        <input type="text" name="date_value" class="form-control" placeholder="Enter date (YYYY-MM-DD, YYYY-MM, or YYYY)" value="<?php echo htmlspecialchars($filter_date_value); ?>">
+                                    </div>
+                                    
+                                    <div class="col-md-3 mb-3">
                                         <button type="submit" class="btn btn-primary">Apply Filter</button>
                                         <a href="payment_reports.php" class="btn btn-secondary">Clear Filter</a>
                                     </div>

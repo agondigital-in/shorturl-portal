@@ -124,31 +124,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Only update publishers if assignments have changed
             if ($publishers_changed) {
-                // Update publishers - first delete existing associations
-                $stmt = $conn->prepare("DELETE FROM campaign_publishers WHERE campaign_id = ?");
+                // Get current publisher assignments
+                $stmt = $conn->prepare("SELECT publisher_id FROM campaign_publishers WHERE campaign_id = ?");
                 $stmt->execute([$campaign_id]);
+                $current_publisher_ids = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
                 
-                // Then insert new associations
-                if (!empty($publisher_ids)) {
-                    $stmt = $conn->prepare("INSERT INTO campaign_publishers (campaign_id, publisher_id) VALUES (?, ?)");
-                    foreach ($publisher_ids as $publisher_id) {
-                        $stmt->execute([$campaign_id, $publisher_id]);
-                    }
+                // Get publisher IDs to add (newly assigned)
+                $publishers_to_add = array_diff($publisher_ids, $current_publisher_ids);
+                
+                // Get publisher IDs to remove (no longer assigned)
+                $publishers_to_remove = array_diff($current_publisher_ids, $publisher_ids);
+                
+                // Remove publisher associations
+                if (!empty($publishers_to_remove)) {
+                    $placeholders = str_repeat('?,', count($publishers_to_remove) - 1) . '?';
+                    $stmt = $conn->prepare("DELETE FROM campaign_publishers WHERE campaign_id = ? AND publisher_id IN ($placeholders)");
+                    $params = array_merge([$campaign_id], $publishers_to_remove);
+                    $stmt->execute($params);
+                    
+                    // Also remove publisher short codes
+                    $stmt = $conn->prepare("DELETE FROM publisher_short_codes WHERE campaign_id = ? AND publisher_id IN ($placeholders)");
+                    $stmt->execute($params);
                 }
                 
-                // Update publisher short codes - first delete existing entries
-                $stmt = $conn->prepare("DELETE FROM publisher_short_codes WHERE campaign_id = ?");
-                $stmt->execute([$campaign_id]);
-                
-                // Then insert new publisher short codes
-                if (!empty($publisher_ids)) {
-                    // Get base shortcode for this campaign
-                    $stmt = $conn->prepare("SELECT shortcode FROM campaigns WHERE id = ?");
-                    $stmt->execute([$campaign_id]);
-                    $base_shortcode = $stmt->fetchColumn();
+                // Add new publisher associations
+                if (!empty($publishers_to_add)) {
+                    $stmt = $conn->prepare("INSERT INTO campaign_publishers (campaign_id, publisher_id) VALUES (?, ?)");
+                    foreach ($publishers_to_add as $publisher_id) {
+                        $stmt->execute([$campaign_id, $publisher_id]);
+                    }
                     
+                    // Add new publisher short codes
                     $shortcode_stmt = $conn->prepare("INSERT INTO publisher_short_codes (campaign_id, publisher_id, short_code) VALUES (?, ?, ?)");
-                    foreach ($publisher_ids as $publisher_id) {
+                    foreach ($publishers_to_add as $publisher_id) {
                         // Generate unique publisher-specific short code
                         $publisher_shortcode = '';
                         $is_unique = false;
@@ -179,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($url_changed) {
                 $success = "Campaign updated successfully. All tracking links now point to the new website URL. Click counts have been preserved.";
             } elseif ($publishers_changed) {
-                $success = "Campaign updated successfully. Publisher assignments have changed.";
+                $success = "Campaign updated successfully. Publisher assignments have changed. Click counts have been preserved for existing publishers.";
             } else {
                 $success = "Campaign updated successfully.";
             }
