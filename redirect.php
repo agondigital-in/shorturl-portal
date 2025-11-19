@@ -24,13 +24,24 @@ if (empty($publisher_id) && !empty($short_code)) {
         
         if ($result) {
             $publisher_id = $result['publisher_id'];
+            $campaign_id = $result['campaign_id'];
+            
             // Update click count for this publisher's link
             $stmt = $conn->prepare("UPDATE publisher_short_codes SET clicks = clicks + 1 WHERE short_code = ?");
             $stmt->execute([$short_code]);
             
             // Update total click count for the campaign
             $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = ?");
-            $stmt->execute([$result['campaign_id']]);
+            $stmt->execute([$campaign_id]);
+            
+            // Track daily clicks
+            $today = date('Y-m-d');
+            $stmt = $conn->prepare("
+                INSERT INTO publisher_daily_clicks (campaign_id, publisher_id, click_date, clicks)
+                VALUES (?, ?, ?, 1)
+                ON DUPLICATE KEY UPDATE clicks = clicks + 1
+            ");
+            $stmt->execute([$campaign_id, $publisher_id, $today]);
             
             // Redirect to the target URL
             header("Location: " . $result['target_url'], true, 302);
@@ -78,21 +89,51 @@ try {
             die('Invalid link!');
         }
         
+        // Get campaign_id for daily tracking
+        $stmt = $conn->prepare("SELECT campaign_id FROM publisher_short_codes WHERE short_code = ? AND publisher_id = ?");
+        $stmt->execute([$short_code, $publisher_id]);
+        $campaign_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $campaign_id = $campaign_data['campaign_id'];
+        
         // Update click count for publisher-specific short code
         $stmt = $conn->prepare("UPDATE publisher_short_codes SET clicks = clicks + 1 WHERE short_code = ? AND publisher_id = ?");
         $stmt->execute([$short_code, $publisher_id]);
         
         // Update total click count for the campaign
-        $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = (SELECT campaign_id FROM publisher_short_codes WHERE short_code = ? AND publisher_id = ?)");
-        $stmt->execute([$short_code, $publisher_id]);
+        $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = ?");
+        $stmt->execute([$campaign_id]);
+        
+        // Track daily clicks
+        $today = date('Y-m-d');
+        $stmt = $conn->prepare("
+            INSERT INTO publisher_daily_clicks (campaign_id, publisher_id, click_date, clicks)
+            VALUES (?, ?, ?, 1)
+            ON DUPLICATE KEY UPDATE clicks = clicks + 1
+        ");
+        $stmt->execute([$campaign_id, $publisher_id, $today]);
     } else {
+        // Get campaign_id for daily tracking
+        $stmt = $conn->prepare("SELECT campaign_id FROM campaign_publishers WHERE id = ?");
+        $stmt->execute([$result['campaign_publisher_id']]);
+        $campaign_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $campaign_id = $campaign_data['campaign_id'];
+        
         // Update click count for campaign_publisher link
         $stmt = $conn->prepare("UPDATE campaign_publishers SET clicks = clicks + 1 WHERE id = ?");
         $stmt->execute([$result['campaign_publisher_id']]);
         
         // Update total click count for the campaign
-        $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = (SELECT campaign_id FROM campaign_publishers WHERE id = ?)");
-        $stmt->execute([$result['campaign_publisher_id']]);
+        $stmt = $conn->prepare("UPDATE campaigns SET click_count = click_count + 1 WHERE id = ?");
+        $stmt->execute([$campaign_id]);
+        
+        // Track daily clicks
+        $today = date('Y-m-d');
+        $stmt = $conn->prepare("
+            INSERT INTO publisher_daily_clicks (campaign_id, publisher_id, click_date, clicks)
+            VALUES (?, ?, ?, 1)
+            ON DUPLICATE KEY UPDATE clicks = clicks + 1
+        ");
+        $stmt->execute([$campaign_id, $publisher_id, $today]);
     }
     
     // Check if campaign is within date range

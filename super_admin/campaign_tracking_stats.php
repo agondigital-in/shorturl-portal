@@ -10,6 +10,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
 
 require_once '../db_connection.php';
 
+// Detect environment and set base URL
+$is_localhost = (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
+if ($is_localhost) {
+    $base_url = 'http://localhost/shorturl/c/';
+} else {
+    $base_url = 'https://tracking.agondigital.in/c/';
+}
+
 // Get campaign ID from URL parameter
 $campaign_id = $_GET['id'] ?? '';
 
@@ -115,7 +123,7 @@ try {
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Base Short Code:</strong> <?php echo htmlspecialchars($campaign['shortcode']); ?> <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" onclick="copyToClipboard('https://tracking.agondigital.in/<?php echo htmlspecialchars($campaign['shortcode']); ?>', this)">Copy Link</button></p>
+                                <p><strong>Base Short Code:</strong> <?php echo htmlspecialchars($campaign['shortcode']); ?> <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" onclick="copyToClipboard('<?php echo rtrim($base_url, '/c/') . '/' . htmlspecialchars($campaign['shortcode']); ?>', this)">Copy Link</button></p>
                                 <p><strong>Advertisers:</strong> <?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?></p>
                                 <p><strong>Start Date:</strong> <?php echo htmlspecialchars($campaign['start_date']); ?></p>
                             </div>
@@ -129,8 +137,9 @@ try {
                 </div>
                 
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Publisher Tracking Statistics</h5>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Publisher Tracking Statistics</h5>
+                        <a href="publisher_daily_clicks.php?id=<?php echo $campaign_id; ?>" class="btn btn-info btn-sm">View Daily Clicks</a>
                     </div>
                     <div class="card-body">
                         <?php if (empty($publisher_stats)): ?>
@@ -157,8 +166,8 @@ try {
                                                 <td><?php echo htmlspecialchars($stats['short_code']); ?></td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <code id="tracking-link-<?php echo $stats['short_code']; ?>">https://tracking.agondigital.in/c/<?php echo htmlspecialchars($stats['short_code']); ?></code>
-                                                        <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" data-link="https://tracking.agondigital.in/c/<?php echo htmlspecialchars($stats['short_code']); ?>" onclick="copyToClipboard('https://tracking.agondigital.in/c/<?php echo htmlspecialchars($stats['short_code']); ?>', this)">Copy</button>
+                                                        <code id="tracking-link-<?php echo $stats['short_code']; ?>"><?php echo $base_url . htmlspecialchars($stats['short_code']); ?></code>
+                                                        <button class="btn btn-outline-primary btn-sm ms-2 copy-btn" data-link="<?php echo $base_url . htmlspecialchars($stats['short_code']); ?>" onclick="copyToClipboard('<?php echo $base_url . htmlspecialchars($stats['short_code']); ?>', this)">Copy</button>
                                                     </div>
                                                 </td>
                                                 <td><?php echo $stats['clicks']; ?></td>
