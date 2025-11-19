@@ -736,7 +736,7 @@ foreach ($publisher_performance as $performance) {
                         </div>
                         <div>
                             <button class="btn btn-sm btn-outline-light" onclick="printDailyClickSummary()">
-                                <i class="fas fa-print me-1"></i>Print Report
+                                <i class="fas fa-print me-1"></i>Print All
                             </button>
                         </div>
                     </div>
@@ -749,12 +749,13 @@ foreach ($publisher_performance as $performance) {
                                         <th><i class="fas fa-users me-1"></i> Advertisers</th>
                                         <th><i class="fas fa-share-alt me-1"></i> Publisher</th>
                                         <th><i class="fas fa-mouse-pointer me-1"></i> Clicks</th>
+                                        <th><i class="fas fa-print me-1"></i> Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php if (empty($campaign_click_summary)): ?>
                                     <tr>
-                                        <td colspan="4" class="text-center">
+                                        <td colspan="5" class="text-center">
                                             <div class="alert alert-info mb-0">
                                                 <i class="fas fa-info-circle me-2"></i>No click data available for this date range
                                             </div>
@@ -785,6 +786,11 @@ foreach ($publisher_performance as $performance) {
                                                             <?php echo number_format($publisher_data['clicks']); ?>
                                                         </span>
                                                     </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="printCampaignRow(this)" data-campaign="<?php echo htmlspecialchars($summary['name']); ?>" data-advertisers="<?php echo htmlspecialchars(implode(', ', $summary['advertisers'] ?? ['None'])); ?>" data-publisher="<?php echo htmlspecialchars($publisher_data['name']); ?>" data-clicks="<?php echo $publisher_data['clicks']; ?>">
+                                                            <i class="fas fa-print"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
@@ -806,6 +812,11 @@ foreach ($publisher_performance as $performance) {
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-secondary fs-6">0</span>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="printCampaignRow(this)" data-campaign="<?php echo htmlspecialchars($summary['name']); ?>" data-advertisers="<?php echo htmlspecialchars(implode(', ', $summary['advertisers'] ?? ['None'])); ?>" data-publisher="No publishers" data-clicks="0">
+                                                            <i class="fas fa-print"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             <?php endif; ?>
@@ -908,6 +919,63 @@ foreach ($publisher_performance as $performance) {
             }
             
             document.body.innerHTML = clone.innerHTML;
+            window.print();
+            
+            document.body.innerHTML = originalContents;
+        }
+
+        function printCampaignRow(button) {
+            const campaign = button.getAttribute('data-campaign');
+            const advertisers = button.getAttribute('data-advertisers');
+            const publisher = button.getAttribute('data-publisher');
+            const clicks = button.getAttribute('data-clicks');
+            
+            const originalContents = document.body.innerHTML;
+            
+            const printContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #4361ee; border-bottom: 2px solid #4361ee; padding-bottom: 10px;">
+                        <i class="fas fa-chart-bar"></i> Campaign Report
+                    </h2>
+                    <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <p><strong>Report Date:</strong> 
+                            <?php 
+                            if ($report_start_date === $report_end_date) {
+                                echo date('F j, Y', strtotime($report_date));
+                            } else {
+                                echo date('F j, Y', strtotime($report_start_date)) . ' to ' . date('F j, Y', strtotime($report_end_date));
+                            }
+                            ?>
+                        </p>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <thead>
+                            <tr style="background: #4361ee; color: white;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Campaign</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Advertisers</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Publisher</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Clicks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #ddd;"><strong>${campaign}</strong></td>
+                                <td style="padding: 12px; border: 1px solid #ddd;">${advertisers}</td>
+                                <td style="padding: 12px; border: 1px solid #ddd;">${publisher}</td>
+                                <td style="padding: 12px; border: 1px solid #ddd;">${clicks}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
+                        <p>Generated on: <?php echo date('F j, Y g:i A'); ?></p>
+                        <p>Ads Platform - Super Admin Report</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.innerHTML = printContent;
             window.print();
             
             document.body.innerHTML = originalContents;
