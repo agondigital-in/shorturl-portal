@@ -1,5 +1,5 @@
 <?php
-// super_admin/publisher_daily_clicks.php - View daily click statistics
+// super_admin/all_publishers_daily_clicks.php - View all publishers' daily click statistics
 session_start();
 
 // Check if user is logged in and is super admin
@@ -12,24 +12,6 @@ require_once '../db_connection.php';
 
 $db = Database::getInstance();
 $conn = $db->getConnection();
-
-// Get campaign ID from URL
-$campaign_id = $_GET['id'] ?? null;
-
-if (!$campaign_id) {
-    header('Location: campaigns.php');
-    exit();
-}
-
-// Get campaign details
-$stmt = $conn->prepare("SELECT * FROM campaigns WHERE id = ?");
-$stmt->execute([$campaign_id]);
-$campaign = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$campaign) {
-    header('Location: campaigns.php');
-    exit();
-}
 
 // Date Filter Logic
 $filter_type = $_GET['filter'] ?? 'custom';
@@ -60,44 +42,31 @@ if (isset($_GET['filter'])) {
     }
 }
 
-// Get daily clicks data
-$stmt = $conn->prepare("
-    SELECT 
-        pdc.click_date,
-        p.name as publisher_name,
-        p.id as publisher_id,
-        pdc.clicks,
-        pdc.created_at
-    FROM publisher_daily_clicks pdc
-    JOIN publishers p ON pdc.publisher_id = p.id
-    WHERE pdc.campaign_id = ? 
-    AND pdc.click_date BETWEEN ? AND ?
-    ORDER BY pdc.click_date DESC, p.name ASC
-");
-$stmt->execute([$campaign_id, $start_date, $end_date]);
-$daily_clicks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Get summary by publisher
+// Get all publishers' summary data with campaign information
 $stmt = $conn->prepare("
     SELECT 
         p.name as publisher_name,
         p.id as publisher_id,
+        c.name as campaign_name,
+        c.id as campaign_id,
         SUM(pdc.clicks) as total_clicks,
         COUNT(DISTINCT pdc.click_date) as active_days
     FROM publisher_daily_clicks pdc
     JOIN publishers p ON pdc.publisher_id = p.id
-    WHERE pdc.campaign_id = ? 
-    AND pdc.click_date BETWEEN ? AND ?
-    GROUP BY p.id, p.name
-    ORDER BY total_clicks DESC
+    JOIN campaigns c ON pdc.campaign_id = c.id
+    WHERE pdc.click_date BETWEEN ? AND ?
+    GROUP BY p.id, p.name, c.id, c.name
+    ORDER BY p.name ASC, total_clicks DESC
 ");
-$stmt->execute([$campaign_id, $start_date, $end_date]);
+$stmt->execute([$start_date, $end_date]);
 $publisher_summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate total clicks for the period
 $total_period_clicks = 0;
+$total_active_publishers = 0;
 foreach ($publisher_summary as $p) {
     $total_period_clicks += $p['total_clicks'];
+    $total_active_publishers++;
 }
 ?>
 <!DOCTYPE html>
@@ -105,7 +74,7 @@ foreach ($publisher_summary as $p) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Click Statistics - <?php echo htmlspecialchars($campaign['name']); ?></title>
+    <title>All Publishers Daily Clicks - Ads Platform</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -140,12 +109,12 @@ foreach ($publisher_summary as $p) {
             <div class="col-md-2">
                 <div class="sidebar-nav">
                     <a href="dashboard.php" class="nav-link-custom"><i class="fas fa-home"></i> Dashboard</a>
-                    <a href="campaigns.php" class="nav-link-custom active"><i class="fas fa-bullhorn"></i> Campaigns</a>
+                    <a href="campaigns.php" class="nav-link-custom"><i class="fas fa-bullhorn"></i> Campaigns</a>
                     <a href="advertisers.php" class="nav-link-custom"><i class="fas fa-users"></i> Advertisers</a>
                     <a href="publishers.php" class="nav-link-custom"><i class="fas fa-network-wired"></i> Publishers</a>
                     <a href="admins.php" class="nav-link-custom"><i class="fas fa-user-shield"></i> Admins</a>
                     <a href="payment_reports.php" class="nav-link-custom"><i class="fas fa-file-invoice-dollar"></i> Reports</a>
-                    <a href="all_publishers_daily_clicks.php" class="nav-link-custom"><i class="fas fa-chart-bar"></i> All Publishers Stats</a>
+                    <a href="all_publishers_daily_clicks.php" class="nav-link-custom active"><i class="fas fa-chart-bar"></i> All Publishers Stats</a>
                 </div>
             </div>
             
@@ -153,12 +122,9 @@ foreach ($publisher_summary as $p) {
             <div class="col-md-10">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h2 class="fw-bold mb-1 text-dark">Campaign Analytics</h2>
-                        <p class="text-secondary mb-0">Detailed click tracking for <span class="text-primary fw-semibold"><?php echo htmlspecialchars($campaign['name']); ?></span></p>
+                        <h2 class="fw-bold mb-1 text-dark">All Publishers Daily Clicks</h2>
+                        <p class="text-secondary mb-0">Aggregated click statistics for all publishers across all campaigns</p>
                     </div>
-                    <a href="campaign_tracking_stats.php?id=<?php echo $campaign_id; ?>" class="btn btn-outline-custom">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Stats
-                    </a>
                 </div>
 
                 <!-- Filters -->
@@ -168,15 +134,14 @@ foreach ($publisher_summary as $p) {
                             <div class="col-lg-5">
                                 <label class="text-secondary mb-2 text-uppercase small fw-bold">Quick Filters</label>
                                 <div class="d-flex gap-2">
-                                    <a href="?id=<?php echo $campaign_id; ?>&filter=today" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'today') ? 'active' : ''; ?>">Today</a>
-                                    <a href="?id=<?php echo $campaign_id; ?>&filter=yesterday" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'yesterday') ? 'active' : ''; ?>">Yesterday</a>
-                                    <a href="?id=<?php echo $campaign_id; ?>&filter=this_month" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'this_month') ? 'active' : ''; ?>">Month</a>
-                                    <a href="?id=<?php echo $campaign_id; ?>&filter=previous_month" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'previous_month') ? 'active' : ''; ?>">Prev Month</a>
+                                    <a href="?filter=today" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'today') ? 'active' : ''; ?>">Today</a>
+                                    <a href="?filter=yesterday" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'yesterday') ? 'active' : ''; ?>">Yesterday</a>
+                                    <a href="?filter=this_month" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'this_month') ? 'active' : ''; ?>">Month</a>
+                                    <a href="?filter=previous_month" class="btn btn-outline-custom flex-grow-1 <?php echo ($filter_type == 'previous_month') ? 'active' : ''; ?>">Prev Month</a>
                                 </div>
                             </div>
                             <div class="col-lg-7">
                                 <form method="GET" class="row g-3">
-                                    <input type="hidden" name="id" value="<?php echo $campaign_id; ?>">
                                     <input type="hidden" name="filter" value="custom">
                                     <div class="col-md-5">
                                         <label class="text-secondary mb-2 text-uppercase small fw-bold">Start Date</label>
@@ -219,7 +184,7 @@ foreach ($publisher_summary as $p) {
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <div class="stat-label mb-2">Active Publishers</div>
-                                    <div class="stat-value text-success"><?php echo count($publisher_summary); ?></div>
+                                    <div class="stat-value text-success"><?php echo $total_active_publishers; ?></div>
                                 </div>
                                 <div class="icon-box bg-success bg-opacity-10 p-3 rounded-circle text-success">
                                     <i class="fas fa-users fa-lg"></i>
@@ -234,95 +199,68 @@ foreach ($publisher_summary as $p) {
                         <div class="modern-card stat-card-gradient p-4 h-100">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="stat-label mb-2">Top Performer</div>
-                                    <div class="stat-value text-warning" style="font-size: 1.8rem;">
-                                        <?php echo !empty($publisher_summary) ? htmlspecialchars($publisher_summary[0]['publisher_name']) : 'N/A'; ?>
-                                    </div>
+                                    <div class="stat-label mb-2">Average/Day</div>
+                                    <div class="stat-value text-warning"><?php echo $total_active_publishers > 0 ? number_format($total_period_clicks / $total_active_publishers, 1) : '0'; ?></div>
                                 </div>
                                 <div class="icon-box bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
-                                    <i class="fas fa-trophy fa-lg"></i>
+                                    <i class="fas fa-chart-line fa-lg"></i>
                                 </div>
                             </div>
                             <div class="mt-3 text-secondary small">
-                                <i class="fas fa-star me-1"></i> Most clicks generated
+                                <i class="fas fa-star me-1"></i> Per publisher
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row g-4">
-                    <!-- Publisher Summary -->
-                    <div class="col-lg-6">
-                        <div class="modern-card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5>Publisher Performance</h5>
-                                <span class="badge badge-soft-primary rounded-pill px-3 py-2">Summary</span>
-                            </div>
-                            <div class="card-body p-0">
-                                <?php if (empty($publisher_summary)): ?>
-                                    <div class="p-4 text-center text-secondary">No data available</div>
-                                <?php else: ?>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Publisher</th>
-                                                    <th class="text-end">Clicks</th>
-                                                    <th class="text-center">Active Days</th>
-                                                    <th class="text-end">Avg/Day</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($publisher_summary as $summary): ?>
-                                                    <tr>
-                                                        <td class="fw-medium text-dark"><?php echo htmlspecialchars($summary['publisher_name']); ?></td>
-                                                        <td class="text-end fw-bold text-primary"><?php echo number_format($summary['total_clicks']); ?></td>
-                                                        <td class="text-center text-secondary"><?php echo $summary['active_days']; ?></td>
-                                                        <td class="text-end text-secondary"><?php echo number_format($summary['total_clicks'] / max($summary['active_days'], 1), 1); ?></td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
+                <!-- Publisher Summary -->
+                <div class="modern-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Publisher Performance Summary</h5>
+                        <span class="badge badge-soft-primary rounded-pill px-3 py-2">All Publishers</span>
                     </div>
-
-                    <!-- Daily Breakdown -->
-                    <div class="col-lg-6">
-                        <div class="modern-card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5>Daily Breakdown</h5>
-                                <span class="badge badge-soft-success rounded-pill px-3 py-2">Detailed</span>
+                    <div class="card-body p-0">
+                        <?php if (empty($publisher_summary)): ?>
+                            <div class="p-4 text-center text-secondary">No data available for the selected period</div>
+                        <?php else: ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Campaign Name</th>
+                                            <th>Publisher</th>
+                                            <th class="text-end">Clicks</th>
+                                            <th class="text-center">Active Days</th>
+                                            <th class="text-end">Avg/Day</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($publisher_summary as $summary): ?>
+                                            <tr>
+                                                <td class="fw-medium text-dark"><?php echo htmlspecialchars($summary['campaign_name']); ?></td>
+                                                <td class="fw-medium text-dark"><?php echo htmlspecialchars($summary['publisher_name']); ?></td>
+                                                <td class="text-end fw-bold text-primary"><?php echo number_format($summary['total_clicks']); ?></td>
+                                                <td class="text-center text-secondary"><?php echo $summary['active_days']; ?></td>
+                                                <td class="text-end text-secondary"><?php echo number_format($summary['total_clicks'] / max($summary['active_days'], 1), 1); ?></td>
+                                                <td class="text-center">
+                                                    <a href="publisher_daily_clicks.php?id=<?php echo $summary['campaign_id']; ?>&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye me-1"></i>View Details
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light border-top">
+                                            <td colspan="2" class="fw-bold">Total</td>
+                                            <td class="text-end fw-bold text-primary"><?php echo number_format($total_period_clicks); ?></td>
+                                            <td colspan="3"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
-                            <div class="card-body p-0">
-                                <?php if (empty($daily_clicks)): ?>
-                                    <div class="p-4 text-center text-secondary">No daily records found</div>
-                                <?php else: ?>
-                                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                                        <table class="table table-hover mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Date</th>
-                                                    <th>Publisher</th>
-                                                    <th class="text-end">Clicks</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($daily_clicks as $click): ?>
-                                                    <tr>
-                                                        <td class="text-secondary"><?php echo date('M d, Y', strtotime($click['click_date'])); ?></td>
-                                                        <td class="fw-medium text-dark"><?php echo htmlspecialchars($click['publisher_name']); ?></td>
-                                                        <td class="text-end fw-bold text-dark"><?php echo number_format($click['clicks']); ?></td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 

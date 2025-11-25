@@ -81,233 +81,58 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campaigns - Ads Platform</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .icon-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        .card {
-            border: none;
-            border-radius: 10px;
-        }
-        .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-            font-weight: 600;
-        }
-        .shadow {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
-        }
-        .table th {
-            background-color: #f8f9fa;
-        }
-        .sidebar {
-            height: calc(100vh - 56px);
-            position: sticky;
-            top: 56px;
-        }
-        .sidebar-sticky {
-            position: relative;
-            top: 0;
-            height: calc(100vh - 56px);
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-        .nav-link {
-            color: #495057;
-            padding: 0.75rem 1rem;
-            border-left: 3px solid transparent;
-        }
-        .nav-link:hover {
-            color: #0d6efd;
-            background-color: #e9ecef;
-        }
-        .nav-link.active {
-            color: #0d6efd;
-            background-color: #e9ecef;
-            border-left: 3px solid #0d6efd;
-        }
-    </style>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="../assets/css/admin-theme.css">
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="dashboard.php">
-                <i class="fas fa-chart-line me-2 text-primary"></i>
-                <span class="fw-bold text-dark">Ads Platform</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
-                <ul class="navbar-nav align-items-center">
-                    <li class="nav-item me-3">
-                        <span class="navbar-text">
-                            <i class="fas fa-user-circle me-1"></i>
-                            Welcome, <span class="fw-semibold"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-outline-danger" href="../logout.php">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
-                    </li>
-                </ul>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="#"><i class="fas fa-chart-line me-2"></i>Ads Platform</a>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-2"></i><?php echo htmlspecialchars($_SESSION['username']); ?>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
+                        <li><a class="dropdown-item" href="../logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row">
+    <div class="container-fluid" style="margin-top: 80px;">
+        <div class="row g-4 p-4">
             <!-- Sidebar -->
-            <div class="col-lg-2 d-none d-lg-block bg-light sidebar p-0">
-                <div class="sidebar-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
-                                <i class="fas fa-home me-2"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'campaigns.php' ? 'active' : ''; ?>" href="campaigns.php">
-                                <i class="fas fa-bullhorn me-2"></i>
-                                <span>Campaigns</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertisers.php' ? 'active' : ''; ?>" href="advertisers.php">
-                                <i class="fas fa-users me-2"></i>
-                                <span>Advertisers</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publishers.php' ? 'active' : ''; ?>" href="publishers.php">
-                                <i class="fas fa-share-alt me-2"></i>
-                                <span>Publishers</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'admins.php' ? 'active' : ''; ?>" href="admins.php">
-                                <i class="fas fa-user-shield me-2"></i>
-                                <span>Admins</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertiser_campaigns.php' ? 'active' : ''; ?>" href="advertiser_campaigns.php">
-                                <i class="fas fa-ad me-2"></i>
-                                <span>Advertiser Campaigns</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publisher_campaigns.php' ? 'active' : ''; ?>" href="publisher_campaigns.php">
-                                <i class="fas fa-link me-2"></i>
-                                <span>Publisher Campaigns</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'payment_reports.php' ? 'active' : ''; ?>" href="payment_reports.php">
-                                <i class="fas fa-file-invoice-dollar me-2"></i>
-                                <span>Payment Reports</span>
-                            </a>
-                        </li>
-                    </ul>
+            <div class="col-md-2">
+                <div class="sidebar-nav">
+                    <a href="dashboard.php" class="nav-link-custom"><i class="fas fa-home"></i> Dashboard</a>
+                    <a href="campaigns.php" class="nav-link-custom active"><i class="fas fa-bullhorn"></i> Campaigns</a>
+                    <a href="advertisers.php" class="nav-link-custom"><i class="fas fa-users"></i> Advertisers</a>
+                    <a href="publishers.php" class="nav-link-custom"><i class="fas fa-network-wired"></i> Publishers</a>
+                    <a href="admins.php" class="nav-link-custom"><i class="fas fa-user-shield"></i> Admins</a>
+                    <a href="payment_reports.php" class="nav-link-custom"><i class="fas fa-file-invoice-dollar"></i> Reports</a>
+                    <a href="all_publishers_daily_clicks.php" class="nav-link-custom"><i class="fas fa-file-invoice-dollar"></i>All Publishers Stats</a>
                 </div>
             </div>
             
-            <!-- Mobile Sidebar Toggle -->
-            <div class="col-12 d-lg-none bg-light p-2">
-                <button class="btn btn-primary w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
-                    <i class="fas fa-bars me-2"></i>Menu
-                </button>
-            </div>
-            
-            <!-- Mobile Offcanvas Sidebar -->
-            <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
-                <div class="offcanvas-header bg-light">
-                    <h5 class="offcanvas-title">Navigation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-                </div>
-                <div class="offcanvas-body p-0">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
-                                <i class="fas fa-home me-2"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'campaigns.php' ? 'active' : ''; ?>" href="campaigns.php">
-                                <i class="fas fa-bullhorn me-2"></i>
-                                <span>Campaigns</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertisers.php' ? 'active' : ''; ?>" href="advertisers.php">
-                                <i class="fas fa-users me-2"></i>
-                                <span>Advertisers</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publishers.php' ? 'active' : ''; ?>" href="publishers.php">
-                                <i class="fas fa-share-alt me-2"></i>
-                                <span>Publishers</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'admins.php' ? 'active' : ''; ?>" href="admins.php">
-                                <i class="fas fa-user-shield me-2"></i>
-                                <span>Admins</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'advertiser_campaigns.php' ? 'active' : ''; ?>" href="advertiser_campaigns.php">
-                                <i class="fas fa-ad me-2"></i>
-                                <span>Advertiser Campaigns</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publisher_campaigns.php' ? 'active' : ''; ?>" href="publisher_campaigns.php">
-                                <i class="fas fa-link me-2"></i>
-                                <span>Publisher Campaigns</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'payment_reports.php' ? 'active' : ''; ?>" href="payment_reports.php">
-                                <i class="fas fa-file-invoice-dollar me-2"></i>
-                                <span>Payment Reports</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <main class="col-lg-10 ms-sm-auto px-md-4 py-3">
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h1 class="h3 mb-0 text-dark">Campaigns</h1>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb mb-0">
-                                    <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Campaigns</li>
-                                </ol>
-                            </nav>
-                        </div>
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1 text-dark">Campaigns</h2>
+                        <p class="text-secondary mb-0">Manage and track all your marketing campaigns</p>
                     </div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4 mb-0">All Campaigns</h2>
                     <a href="add_campaign.php" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i>Add New Campaign
+                        <i class="fas fa-plus me-2"></i>Add New Campaign
                     </a>
                 </div>
                 
@@ -319,13 +144,23 @@ try {
                     <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
                 <?php endif; ?>
                 
-                <div class="card">
-                    <div class="card-body">
+                <div class="modern-card">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="mb-0 fw-bold">All Campaigns</h5>
+                    </div>
+                    <div class="card-body p-0">
                         <?php if (empty($campaigns)): ?>
-                            <p>No campaigns found. <a href="add_campaign.php">Create your first campaign</a>.</p>
+                            <div class="p-5 text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-bullhorn fa-3x text-secondary opacity-50"></i>
+                                </div>
+                                <h5 class="text-secondary">No campaigns found</h5>
+                                <p class="text-muted">Get started by creating your first campaign.</p>
+                                <a href="add_campaign.php" class="btn btn-outline-primary mt-2">Create Campaign</a>
+                            </div>
                         <?php else: ?>
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-hover mb-0">
                                     <thead>
                                         <tr>
                                             <th>ID</th>
@@ -336,54 +171,75 @@ try {
                                             <th>End Date</th>
                                             <th>Type</th>
                                             <th>Base Short Code</th>
-                                            <th>Clicks</th>
-                                            <th>Adv. Payout</th>
-                                            <th>Pub. Payout</th>
+                                            <th class="text-end">Clicks</th>
+                                            <th class="text-end">Adv. Payout</th>
+                                            <th class="text-end">Pub. Payout</th>
                                             <th>Status</th>
-                                            <th>Payment Status</th>
-                                            <th>Actions</th>
+                                            <th>Payment</th>
+                                            <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($campaigns as $campaign): ?>
                                             <tr>
-                                                <td><?php echo htmlspecialchars($campaign['id']); ?></td>
-                                                <td><?php echo htmlspecialchars($campaign['name']); ?></td>
-                                                <td><?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?></td>
-                                                <td><?php echo htmlspecialchars($campaign['publisher_names'] ?? 'N/A'); ?></td>
-                                                <td><?php echo htmlspecialchars($campaign['start_date']); ?></td>
-                                                <td><?php echo htmlspecialchars($campaign['end_date']); ?></td>
-                                                <td><?php echo htmlspecialchars($campaign['campaign_type']); ?></td>
-                                                <td><?php echo htmlspecialchars($campaign['shortcode']); ?></td>
-                                                <td><?php echo $campaign['click_count']; ?></td>
-                                                <td>₹<?php echo number_format($campaign['advertiser_payout'], 2); ?></td>
-                                                <td>₹<?php echo number_format($campaign['publisher_payout'], 2); ?></td>
+                                                <td class="text-secondary">#<?php echo htmlspecialchars($campaign['id']); ?></td>
+                                                <td class="fw-medium text-dark"><?php echo htmlspecialchars($campaign['name']); ?></td>
                                                 <td>
-                                                    <span class="badge bg-<?php echo $campaign['status'] === 'active' ? 'success' : 'secondary'; ?>">
+                                                    <div class="text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?>">
+                                                        <?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($campaign['publisher_names'] ?? 'N/A'); ?>">
+                                                        <?php echo htmlspecialchars($campaign['publisher_names'] ?? 'N/A'); ?>
+                                                    </div>
+                                                </td>
+                                                <td class="small"><?php echo htmlspecialchars($campaign['start_date']); ?></td>
+                                                <td class="small"><?php echo htmlspecialchars($campaign['end_date']); ?></td>
+                                                <td><span class="badge bg-light text-dark border"><?php echo htmlspecialchars($campaign['campaign_type']); ?></span></td>
+                                                <td class="font-monospace small"><?php echo htmlspecialchars($campaign['shortcode']); ?></td>
+                                                <td class="text-end fw-bold"><?php echo number_format($campaign['click_count']); ?></td>
+                                                <td class="text-end text-success">₹<?php echo number_format($campaign['advertiser_payout'], 2); ?></td>
+                                                <td class="text-end text-danger">₹<?php echo number_format($campaign['publisher_payout'], 2); ?></td>
+                                                <td>
+                                                    <span class="badge <?php echo $campaign['status'] === 'active' ? 'bg-success' : 'bg-secondary'; ?> rounded-pill">
                                                         <?php echo ucfirst($campaign['status']); ?>
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-<?php echo $campaign['payment_status'] === 'completed' ? 'success' : 'warning'; ?>">
+                                                    <span class="badge <?php echo $campaign['payment_status'] === 'completed' ? 'bg-success' : 'bg-warning'; ?> rounded-pill">
                                                         <?php echo ucfirst($campaign['payment_status']); ?>
                                                     </span>
                                                 </td>
-                                                <td>
-                                                    <a href="campaign_tracking_stats.php?id=<?php echo $campaign['id']; ?>" class="btn btn-sm btn-info">Tracking Stats</a>
-                                                    <a href="edit_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                                                    <form method="POST" class="d-inline">
-                                                        <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
-                                                        <input type="hidden" name="action" value="update_status">
-                                                        <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
-                                                            <option value="active" <?php echo $campaign['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
-                                                            <option value="inactive" <?php echo $campaign['status'] === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                                                        </select>
-                                                    </form>
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this campaign?')">
-                                                        <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
-                                                        <input type="hidden" name="action" value="delete">
-                                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                                    </form>
+                                                <td class="pe-4 text-end">
+                                                    <div class="d-flex justify-content-end gap-2">
+                                                        <a href="campaign_tracking_stats.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-info" title="Tracking Stats" data-bs-toggle="tooltip">
+                                                            <i class="fas fa-chart-line fa-lg"></i>
+                                                        </a>
+                                                        <a href="edit_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-warning" title="Edit Campaign" data-bs-toggle="tooltip">
+                                                            <i class="fas fa-edit fa-lg"></i>
+                                                        </a>
+                                                        <form method="POST" class="d-inline">
+                                                            <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
+                                                            <input type="hidden" name="action" value="update_status">
+                                                            <?php if ($campaign['status'] === 'active'): ?>
+                                                                <button type="submit" name="status" value="inactive" class="btn btn-soft-secondary" title="Deactivate" data-bs-toggle="tooltip">
+                                                                    <i class="fas fa-pause fa-lg"></i>
+                                                                </button>
+                                                            <?php else: ?>
+                                                                <button type="submit" name="status" value="active" class="btn btn-soft-success" title="Activate" data-bs-toggle="tooltip">
+                                                                    <i class="fas fa-play fa-lg"></i>
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </form>
+                                                        <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this campaign?')">
+                                                            <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
+                                                            <input type="hidden" name="action" value="delete">
+                                                            <button type="submit" class="btn btn-soft-danger" title="Delete" data-bs-toggle="tooltip">
+                                                                <i class="fas fa-trash fa-lg"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -393,7 +249,7 @@ try {
                         <?php endif; ?>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 

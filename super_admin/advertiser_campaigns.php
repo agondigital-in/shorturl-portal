@@ -207,6 +207,12 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'all_publishers_daily_clicks.php' ? 'active' : ''; ?>" href="all_publishers_daily_clicks.php">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                <span>All Publishers Stats</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'payment_reports.php' ? 'active' : ''; ?>" href="payment_reports.php">
                                 <i class="fas fa-file-invoice-dollar me-2"></i>
                                 <span>Payment Reports</span>
@@ -271,6 +277,12 @@ try {
                             <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'publisher_campaigns.php' ? 'active' : ''; ?>" href="publisher_campaigns.php">
                                 <i class="fas fa-link me-2"></i>
                                 <span>Publisher Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'all_publishers_daily_clicks.php' ? 'active' : ''; ?>" href="all_publishers_daily_clicks.php">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                <span>All Publishers Stats</span>
                             </a>
                         </li>
                         <li class="nav-item">
