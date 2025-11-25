@@ -113,7 +113,7 @@ foreach ($publisher_summary as $p) {
                     <a href="advertisers.php" class="nav-link-custom"><i class="fas fa-users"></i> Advertisers</a>
                     <a href="publishers.php" class="nav-link-custom"><i class="fas fa-network-wired"></i> Publishers</a>
                     <a href="admins.php" class="nav-link-custom"><i class="fas fa-user-shield"></i> Admins</a>
-                    <a href="payment_reports.php" class="nav-link-custom"><i class="fas fa-file-invoice-dollar"></i> Reports</a>
+                    <a href="payment_reports.php" class="nav-link-custom"><i class="fas fa-file-invoice-dollar"></i> Payment Reports</a>
                     <a href="all_publishers_daily_clicks.php" class="nav-link-custom active"><i class="fas fa-chart-bar"></i> All Publishers Stats</a>
                 </div>
             </div>
