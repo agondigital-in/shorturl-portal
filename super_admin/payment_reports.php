@@ -343,6 +343,18 @@ try {
                                 <span>All Publishers Stats</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'cpv.php' ? 'active' : ''; ?>" href="cpv.php">
+                                <i class="fas fa-compress-alt me-2"></i>
+                                <span>CPV Campaigns</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'cpv_report.php' ? 'active' : ''; ?>" href="cpv_report.php">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                <span>CPV Report</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
