@@ -15,6 +15,21 @@ $conn = $db->getConnection();
 $message = '';
 $error = '';
 
+// Check if campaign was just created
+if (isset($_GET['created']) && $_GET['created'] == 1) {
+    $message = 'CPV Campaign created successfully!';
+}
+
+// Check if campaign was just updated
+if (isset($_GET['updated']) && $_GET['updated'] == 1) {
+    $message = 'Campaign updated successfully!';
+}
+
+// Check if campaign was just deleted
+if (isset($_GET['deleted']) && $_GET['deleted'] == 1) {
+    $message = 'Campaign deleted successfully!';
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
@@ -58,7 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 try {
                     $stmt = $conn->prepare("INSERT INTO cpv_campaigns (campaign_name, original_url, short_code, start_date, end_date, created_by) VALUES (?, ?, ?, ?, ?, ?)");
                     $stmt->execute([$campaign_name, $original_url, $short_code, $start_date, $end_date, $_SESSION['user_id']]);
-                    $message = 'CPV Campaign created successfully!';
+                    // Redirect to refresh page after successful creation
+                    header('Location: cpv.php?created=1');
+                    exit();
                 } catch (PDOException $e) {
                     $error = 'Error: ' . $e->getMessage();
                 }
@@ -83,7 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             try {
                 $stmt = $conn->prepare("UPDATE cpv_campaigns SET campaign_name = ?, original_url = ?, start_date = ?, end_date = ?, status = ? WHERE id = ? AND created_by = ?");
                 $stmt->execute([$campaign_name, $original_url, $start_date, $end_date, $status, $campaign_id, $_SESSION['user_id']]);
-                $message = 'Campaign updated successfully!';
+                header('Location: cpv.php?updated=1');
+                exit();
             } catch (PDOException $e) {
                 $error = 'Error: ' . $e->getMessage();
             }
@@ -96,7 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         try {
             $stmt = $conn->prepare("DELETE FROM cpv_campaigns WHERE id = ? AND created_by = ?");
             $stmt->execute([$campaign_id, $_SESSION['user_id']]);
-            $message = 'Campaign deleted successfully!';
+            header('Location: cpv.php?deleted=1');
+            exit();
         } catch (PDOException $e) {
             $error = 'Error: ' . $e->getMessage();
         }
