@@ -47,12 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif ($start_date > $end_date) {
             $error = 'End date must be after start date!';
         } else {
-            // Generate auto-increment short code like camp1, camp2, camp3
-            $stmt = $conn->prepare("SELECT MAX(CAST(SUBSTRING(short_code, 5) AS UNSIGNED)) as max_num FROM cpv_campaigns WHERE short_code LIKE 'camp%' AND short_code REGEXP '^camp[0-9]+$'");
+            // Generate auto-increment short code like 1, 2, 3
+            $stmt = $conn->prepare("SELECT MAX(CAST(short_code AS UNSIGNED)) as max_num FROM cpv_campaigns WHERE short_code REGEXP '^[0-9]+$'");
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             $next_num = ($result['max_num'] ?? 0) + 1;
-            $short_code = 'camp' . $next_num;
+            $short_code = (string)$next_num;
             
             if (empty($error)) {
                 try {
@@ -210,7 +210,6 @@ $base_url .= dirname(dirname($_SERVER['PHP_SELF'])) . '/cpv_redirect.php?c=';
         <div class="row">
             <?php include 'includes/sidebar.php'; ?>
             
-
             <main class="col-lg-10 ms-sm-auto px-4 py-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="mb-0"><i class="fas fa-compress-alt me-2 text-primary"></i>CPV Campaigns</h2>
@@ -441,7 +440,6 @@ $base_url .= dirname(dirname($_SERVER['PHP_SELF'])) . '/cpv_redirect.php?c=';
         function copyUrl(elementId) {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text).then(() => {
-                // Show success message with better UX
                 const copyBtn = document.querySelector(`[onclick="copyUrl('${elementId}')"]`);
                 const originalClass = copyBtn.className;
                 const originalTitle = copyBtn.title;
@@ -454,7 +452,6 @@ $base_url .= dirname(dirname($_SERVER['PHP_SELF'])) . '/cpv_redirect.php?c=';
                     copyBtn.title = originalTitle;
                 }, 2000);
                 
-                // Optional: Show toast notification instead of alert
                 showToast('URL copied to clipboard!', 'success');
             }).catch(err => {
                 console.error('Failed to copy: ', err);
@@ -463,7 +460,6 @@ $base_url .= dirname(dirname($_SERVER['PHP_SELF'])) . '/cpv_redirect.php?c=';
         }
         
         function showToast(message, type = 'success') {
-            // Create toast element
             const toast = document.createElement('div');
             toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
             toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
@@ -474,7 +470,6 @@ $base_url .= dirname(dirname($_SERVER['PHP_SELF'])) . '/cpv_redirect.php?c=';
             
             document.body.appendChild(toast);
             
-            // Auto remove after 3 seconds
             setTimeout(() => {
                 toast.remove();
             }, 3000);
