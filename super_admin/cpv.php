@@ -47,27 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif ($start_date > $end_date) {
             $error = 'End date must be after start date!';
         } else {
-            // Allow custom short code or generate random one
-            $custom_short_code = trim($_POST['custom_short_code'] ?? '');
-            
-            if (!empty($custom_short_code)) {
-                // Validate custom short code
-                if (!preg_match('/^[a-zA-Z0-9_-]+$/', $custom_short_code)) {
-                    $error = 'Short code can only contain letters, numbers, hyphens and underscores!';
-                } else {
-                    // Check if custom short code already exists
-                    $check_stmt = $conn->prepare("SELECT COUNT(*) FROM cpv_campaigns WHERE short_code = ?");
-                    $check_stmt->execute([$custom_short_code]);
-                    if ($check_stmt->fetchColumn() > 0) {
-                        $error = 'This short code already exists! Please choose another.';
-                    } else {
-                        $short_code = $custom_short_code;
-                    }
-                }
-            } else {
-                // Generate random short code
-                $short_code = substr(md5(uniqid(rand(), true)), 0, 8);
-            }
+            // Generate auto-increment short code like camp1, camp2, camp3
+            $stmt = $conn->prepare("SELECT MAX(CAST(SUBSTRING(short_code, 5) AS UNSIGNED)) as max_num FROM cpv_campaigns WHERE short_code LIKE 'camp%' AND short_code REGEXP '^camp[0-9]+$'");
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $next_num = ($result['max_num'] ?? 0) + 1;
+            $short_code = 'camp' . $next_num;
             
             if (empty($error)) {
                 try {
