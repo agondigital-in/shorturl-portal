@@ -148,15 +148,15 @@ if (!empty($filter_date_to)) {
 
 $where_clause = implode(" AND ", $where_conditions);
 
-// Get all CPV campaigns with click stats
+// Get all CPV campaigns with click stats from daily_stats table (permanent data)
 try {
     $stmt = $conn->prepare("
         SELECT c.*, 
-               COUNT(cc.id) as total_clicks,
-               SUM(CASE WHEN cc.is_duplicate = 0 THEN 1 ELSE 0 END) as original_clicks,
-               SUM(CASE WHEN cc.is_duplicate = 1 THEN 1 ELSE 0 END) as duplicate_clicks
+               COALESCE(SUM(ds.total_clicks), 0) as total_clicks,
+               COALESCE(SUM(ds.original_clicks), 0) as original_clicks,
+               COALESCE(SUM(ds.duplicate_clicks), 0) as duplicate_clicks
         FROM cpv_campaigns c
-        LEFT JOIN cpv_clicks cc ON c.id = cc.campaign_id
+        LEFT JOIN cpv_daily_stats ds ON c.id = ds.campaign_id
         WHERE $where_clause
         GROUP BY c.id
         ORDER BY c.created_at DESC
