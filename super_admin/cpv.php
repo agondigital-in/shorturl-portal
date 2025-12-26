@@ -1,7 +1,13 @@
 <?php
 // super_admin/cpv.php - CPV Campaign Manager
-$page_title = 'CPV Campaigns';
-require_once 'includes/header.php';
+session_start();
+
+// Check if user is logged in and is a super admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
+    header('Location: ../login.php');
+    exit();
+}
+
 require_once '../db_connection.php';
 
 $db = Database::getInstance();
@@ -10,11 +16,7 @@ $conn = $db->getConnection();
 $message = '';
 $error = '';
 
-if (isset($_GET['created'])) $message = 'CPV Campaign created successfully!';
-if (isset($_GET['updated'])) $message = 'Campaign updated successfully!';
-if (isset($_GET['deleted'])) $message = 'Campaign deleted successfully!';
-
-// Handle form submissions
+// Handle form submissions BEFORE any HTML output
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'create') {
         $campaign_name = trim($_POST['campaign_name'] ?? '');
@@ -73,6 +75,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 }
+
+// Now include header AFTER all redirects
+$page_title = 'CPV Campaigns';
+require_once 'includes/header.php';
+
+if (isset($_GET['created'])) $message = 'CPV Campaign created successfully!';
+if (isset($_GET['updated'])) $message = 'Campaign updated successfully!';
+if (isset($_GET['deleted'])) $message = 'Campaign deleted successfully!';
 
 // Get filter parameters
 $filter_status = $_GET['status'] ?? 'all';
