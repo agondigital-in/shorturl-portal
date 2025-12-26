@@ -1,7 +1,13 @@
 <?php
 // super_admin/cpv_stats.php - View detailed click stats for a CPV campaign
-$page_title = 'CPV Stats';
-require_once 'includes/header.php';
+session_start();
+
+// Check if user is logged in and is a super admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
+    header('Location: ../login.php');
+    exit();
+}
+
 require_once '../db_connection.php';
 
 $campaign_id = $_GET['id'] ?? 0;
@@ -13,10 +19,15 @@ $stmt = $conn->prepare("SELECT * FROM cpv_campaigns WHERE id = ? AND created_by 
 $stmt->execute([$campaign_id, $_SESSION['user_id']]);
 $campaign = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Redirect BEFORE any HTML output
 if (!$campaign) {
     header('Location: cpv.php');
     exit();
 }
+
+// Now include header after redirect check
+$page_title = 'CPV Stats - ' . $campaign['campaign_name'];
+require_once 'includes/header.php';
 
 $stmt = $conn->prepare("SELECT COUNT(*) as total_clicks,
     SUM(CASE WHEN is_duplicate = 0 THEN 1 ELSE 0 END) as original_clicks,
