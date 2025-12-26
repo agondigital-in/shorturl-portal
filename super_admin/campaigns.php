@@ -1,13 +1,7 @@
 <?php
 // super_admin/campaigns.php - Campaigns Management
-session_start();
-
-// Check if user is logged in and is a super admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
-    header('Location: ../login.php');
-    exit();
-}
-
+$page_title = 'Campaigns';
+require_once 'includes/header.php';
 require_once '../db_connection.php';
 
 // Handle campaign status update
@@ -39,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $db = Database::getInstance();
             $conn = $db->getConnection();
             
-            // Delete campaign (cascading will remove related records)
             $stmt = $conn->prepare("DELETE FROM campaigns WHERE id = ?");
             $stmt->execute([$campaign_id]);
             
@@ -70,191 +63,188 @@ try {
     $stmt->execute();
     $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    $active_count = count(array_filter($campaigns, fn($c) => $c['status'] === 'active'));
+    $inactive_count = count(array_filter($campaigns, fn($c) => $c['status'] === 'inactive'));
+    $total_clicks = array_sum(array_column($campaigns, 'click_count'));
+    
 } catch (PDOException $e) {
     $error = "Error loading campaigns: " . $e->getMessage();
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campaigns - Ads Platform</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom Theme -->
-    <link rel="stylesheet" href="../assets/css/admin-theme.css">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand" href="#"><i class="fas fa-chart-line me-2"></i>Ads Platform</a>
-            <div class="d-flex align-items-center">
-                <div class="dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-2"></i><?php echo htmlspecialchars($_SESSION['username']); ?>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
-                        <li><a class="dropdown-item" href="../logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Campaigns</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+                <li class="breadcrumb-item active">Campaigns</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="add_campaign.php" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Add New Campaign
+    </a>
+</div>
 
-    <div class="container-fluid" style="margin-top: 80px;">
-        <div class="row g-4 p-4">
-            <!-- Sidebar -->
-            <div class="col-md-2">
-                <div class="sidebar-nav">
-                    <a href="dashboard.php" class="nav-link-custom"><i class="fas fa-home"></i> Dashboard</a>
-                    <a href="campaigns.php" class="nav-link-custom active"><i class="fas fa-bullhorn"></i> Campaigns</a>
-                    <a href="advertisers.php" class="nav-link-custom"><i class="fas fa-users"></i> Advertisers</a>
-                    <a href="publishers.php" class="nav-link-custom"><i class="fas fa-network-wired"></i> Publishers</a>
-                    <a href="admins.php" class="nav-link-custom"><i class="fas fa-user-shield"></i> Admins</a>
-                    <a href="cpv.php" class="nav-link-custom"><i class="fas fa-compress-alt"></i> CPV Campaigns</a>
-                    <a href="cpv_report.php" class="nav-link-custom"><i class="fas fa-chart-bar"></i> CPV Report</a>
-                    <a href="payment_reports.php" class="nav-link-custom"><i class="fas fa-file-invoice-dollar"></i> Reports</a>
-                    <a href="all_publishers_daily_clicks.php" class="nav-link-custom"><i class="fas fa-file-invoice-dollar"></i>All Publishers Stats</a>
-                </div>
-            </div>
-            
-            <!-- Main Content -->
-            <div class="col-md-10">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h2 class="fw-bold mb-1 text-dark">Campaigns</h2>
-                        <p class="text-secondary mb-0">Manage and track all your marketing campaigns</p>
-                    </div>
-                    <a href="add_campaign.php" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Add New Campaign
-                    </a>
-                </div>
-                
-                <?php if (isset($error)): ?>
-                    <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-                <?php endif; ?>
-                
-                <?php if (isset($success)): ?>
-                    <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
-                <?php endif; ?>
-                
-                <div class="modern-card">
-                    <div class="card-header bg-transparent border-bottom py-3">
-                        <h5 class="mb-0 fw-bold">All Campaigns</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <?php if (empty($campaigns)): ?>
-                            <div class="p-5 text-center">
-                                <div class="mb-3">
-                                    <i class="fas fa-bullhorn fa-3x text-secondary opacity-50"></i>
-                                </div>
-                                <h5 class="text-secondary">No campaigns found</h5>
-                                <p class="text-muted">Get started by creating your first campaign.</p>
-                                <a href="add_campaign.php" class="btn btn-outline-primary mt-2">Create Campaign</a>
-                            </div>
-                        <?php else: ?>
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Campaign Name</th>
-                                            <th>Advertisers</th>
-                                            <th>Publishers</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Type</th>
-                                            <th>Base Short Code</th>
-                                            <th class="text-end">Clicks</th>
-                                            <th class="text-end">Adv. Payout</th>
-                                            <th class="text-end">Pub. Payout</th>
-                                            <th>Status</th>
-                                            <th>Payment</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($campaigns as $campaign): ?>
-                                            <tr>
-                                                <td class="text-secondary">#<?php echo htmlspecialchars($campaign['id']); ?></td>
-                                                <td class="fw-medium text-dark"><?php echo htmlspecialchars($campaign['name']); ?></td>
-                                                <td>
-                                                    <div class="text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?>">
-                                                        <?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($campaign['publisher_names'] ?? 'N/A'); ?>">
-                                                        <?php echo htmlspecialchars($campaign['publisher_names'] ?? 'N/A'); ?>
-                                                    </div>
-                                                </td>
-                                                <td class="small"><?php echo htmlspecialchars($campaign['start_date']); ?></td>
-                                                <td class="small"><?php echo htmlspecialchars($campaign['end_date']); ?></td>
-                                                <td><span class="badge bg-light text-dark border"><?php echo htmlspecialchars($campaign['campaign_type']); ?></span></td>
-                                                <td class="font-monospace small"><?php echo htmlspecialchars($campaign['shortcode']); ?></td>
-                                                <td class="text-end fw-bold"><?php echo number_format($campaign['click_count']); ?></td>
-                                                <td class="text-end text-success">₹<?php echo number_format($campaign['advertiser_payout'], 2); ?></td>
-                                                <td class="text-end text-danger">₹<?php echo number_format($campaign['publisher_payout'], 2); ?></td>
-                                                <td>
-                                                    <span class="badge <?php echo $campaign['status'] === 'active' ? 'bg-success' : 'bg-secondary'; ?> rounded-pill">
-                                                        <?php echo ucfirst($campaign['status']); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="badge <?php echo $campaign['payment_status'] === 'completed' ? 'bg-success' : 'bg-warning'; ?> rounded-pill">
-                                                        <?php echo ucfirst($campaign['payment_status']); ?>
-                                                    </span>
-                                                </td>
-                                                <td class="pe-4 text-end">
-                                                    <div class="d-flex justify-content-end gap-2">
-                                                        <a href="campaign_tracking_stats.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-info" title="Tracking Stats" data-bs-toggle="tooltip">
-                                                            <i class="fas fa-chart-line fa-lg"></i>
-                                                        </a>
-                                                        <a href="edit_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-warning" title="Edit Campaign" data-bs-toggle="tooltip">
-                                                            <i class="fas fa-edit fa-lg"></i>
-                                                        </a>
-                                                        <form method="POST" class="d-inline">
-                                                            <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
-                                                            <input type="hidden" name="action" value="update_status">
-                                                            <?php if ($campaign['status'] === 'active'): ?>
-                                                                <button type="submit" name="status" value="inactive" class="btn btn-soft-secondary" title="Deactivate" data-bs-toggle="tooltip">
-                                                                    <i class="fas fa-pause fa-lg"></i>
-                                                                </button>
-                                                            <?php else: ?>
-                                                                <button type="submit" name="status" value="active" class="btn btn-soft-success" title="Activate" data-bs-toggle="tooltip">
-                                                                    <i class="fas fa-play fa-lg"></i>
-                                                                </button>
-                                                            <?php endif; ?>
-                                                        </form>
-                                                        <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this campaign?')">
-                                                            <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
-                                                            <input type="hidden" name="action" value="delete">
-                                                            <button type="submit" class="btn btn-soft-danger" title="Delete" data-bs-toggle="tooltip">
-                                                                <i class="fas fa-trash fa-lg"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
+<?php if (isset($error)): ?>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i><?php echo htmlspecialchars($error); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($success)): ?>
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($success); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card primary">
+            <div class="stat-card-icon"><i class="fas fa-bullhorn"></i></div>
+            <div class="stat-card-value"><?php echo count($campaigns); ?></div>
+            <div class="stat-card-label">Total Campaigns</div>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="stat-card-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-card-value"><?php echo $active_count; ?></div>
+            <div class="stat-card-label">Active</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="stat-card-icon"><i class="fas fa-pause-circle"></i></div>
+            <div class="stat-card-value"><?php echo $inactive_count; ?></div>
+            <div class="stat-card-label">Inactive</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="stat-card-icon"><i class="fas fa-mouse-pointer"></i></div>
+            <div class="stat-card-value"><?php echo number_format($total_clicks); ?></div>
+            <div class="stat-card-label">Total Clicks</div>
+        </div>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<!-- Campaigns Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-bullhorn me-2"></i>All Campaigns</h5>
+        <span class="badge bg-primary"><?php echo count($campaigns); ?> Total</span>
+    </div>
+    <div class="card-body">
+        <?php if (empty($campaigns)): ?>
+            <div class="text-center py-5">
+                <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No campaigns found. Create your first campaign!</p>
+                <a href="add_campaign.php" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>Create Campaign
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Campaign Name</th>
+                            <th>Advertisers</th>
+                            <th>Publishers</th>
+                            <th>Dates</th>
+                            <th>Type</th>
+                            <th>Short Code</th>
+                            <th>Clicks</th>
+                            <th>Payouts</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($campaigns as $campaign): ?>
+                            <tr>
+                                <td><span class="badge badge-soft-primary">#<?php echo $campaign['id']; ?></span></td>
+                                <td><strong><?php echo htmlspecialchars($campaign['name']); ?></strong></td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 120px;" title="<?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?>">
+                                        <?php echo htmlspecialchars($campaign['advertiser_names'] ?? 'N/A'); ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 120px;" title="<?php echo htmlspecialchars($campaign['publisher_names'] ?? 'N/A'); ?>">
+                                        <?php echo htmlspecialchars($campaign['publisher_names'] ?? 'N/A'); ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        <?php echo date('M d', strtotime($campaign['start_date'])); ?> - 
+                                        <?php echo date('M d, Y', strtotime($campaign['end_date'])); ?>
+                                    </small>
+                                </td>
+                                <td><span class="badge badge-soft-primary"><?php echo htmlspecialchars($campaign['campaign_type']); ?></span></td>
+                                <td><code><?php echo htmlspecialchars($campaign['shortcode']); ?></code></td>
+                                <td><strong><?php echo number_format($campaign['click_count']); ?></strong></td>
+                                <td>
+                                    <small>
+                                        <span class="text-success">A: ₹<?php echo number_format($campaign['advertiser_payout'], 2); ?></span><br>
+                                        <span class="text-danger">P: ₹<?php echo number_format($campaign['publisher_payout'], 2); ?></span>
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge <?php echo $campaign['status'] === 'active' ? 'badge-soft-success' : 'badge-soft-warning'; ?>">
+                                        <?php echo ucfirst($campaign['status']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge <?php echo $campaign['payment_status'] === 'completed' ? 'badge-soft-success' : 'badge-soft-warning'; ?>">
+                                        <?php echo ucfirst($campaign['payment_status']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="campaign_tracking_stats.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-info btn-sm" title="Stats">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                        <a href="edit_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-warning btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
+                                            <input type="hidden" name="action" value="update_status">
+                                            <?php if ($campaign['status'] === 'active'): ?>
+                                                <button type="submit" name="status" value="inactive" class="btn btn-soft-secondary btn-sm" title="Deactivate">
+                                                    <i class="fas fa-pause"></i>
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="submit" name="status" value="active" class="btn btn-soft-success btn-sm" title="Activate">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                        </form>
+                                        <form method="POST" class="d-inline" onsubmit="return confirm('Delete this campaign?')">
+                                            <input type="hidden" name="campaign_id" value="<?php echo $campaign['id']; ?>">
+                                            <input type="hidden" name="action" value="delete">
+                                            <button type="submit" class="btn btn-soft-danger btn-sm" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php require_once 'includes/footer.php'; ?>
