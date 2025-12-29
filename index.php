@@ -66,6 +66,7 @@ ini_set('display_errors', 1);
             filter: blur(80px);
             opacity: 0.5;
             animation: float 20s infinite;
+            pointer-events: none;
         }
         
         .orb-1 {
@@ -534,6 +535,8 @@ ini_set('display_errors', 1);
             background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
             opacity: 0;
             transition: opacity 0.4s;
+            pointer-events: none;
+            z-index: 0;
         }
         
         .login-card:hover {
@@ -598,6 +601,8 @@ ini_set('display_errors', 1);
             font-weight: 600;
             text-decoration: none;
             transition: all 0.3s;
+            position: relative;
+            z-index: 10;
         }
         
         .login-btn.admin {
@@ -886,10 +891,10 @@ ini_set('display_errors', 1);
                             <i class="fas fa-sign-in-alt"></i>
                             Login
                         </a>
-                        <a href="publisher_register.php" class="login-btn admin" style="background: linear-gradient(135deg, var(--secondary), #f472b6);">
+                        <!-- <a href="publisher_register.php" class="login-btn admin" style="background: linear-gradient(135deg, var(--secondary), #f472b6);">
                             <i class="fas fa-user-plus"></i>
                             Register
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>
