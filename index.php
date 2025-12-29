@@ -767,6 +767,43 @@ ini_set('display_errors', 1);
         </div>
     </nav>
 
+    <!-- Login Section -->
+    <section class="login-section" id="login" style="padding-top: 120px;">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Get Started</span>
+                <h2>Choose Your Portal</h2>
+                <p>Access your dashboard and start managing your campaigns today</p>
+            </div>
+            <div class="login-grid">
+                <div class="login-card admin">
+                    <div class="login-icon admin">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Admin Portal</h3>
+                    <p>Full control over campaigns, advertisers, publishers, and analytics. Manage everything from one powerful dashboard.</p>
+                    <a href="login.php" class="login-btn admin">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login as Admin
+                    </a>
+                </div>
+                <div class="login-card publisher">
+                    <div class="login-icon publisher">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3>Publisher Portal</h3>
+                    <p>Track your campaigns, monitor performance metrics, and access detailed reports to optimize your earnings.</p>
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="publisher_login.php" class="login-btn publisher">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Hero Section -->
     <section class="hero" id="home">
         <div class="container">
@@ -855,47 +892,6 @@ ini_set('display_errors', 1);
                     </div>
                     <div class="stat-number">1M+</div>
                     <div class="stat-label">Monthly Clicks</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Login Section -->
-    <section class="login-section" id="login">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Get Started</span>
-                <h2>Choose Your Portal</h2>
-                <p>Access your dashboard and start managing your campaigns today</p>
-            </div>
-            <div class="login-grid">
-                <div class="login-card admin">
-                    <div class="login-icon admin">
-                        <i class="fas fa-user-shield"></i>
-                    </div>
-                    <h3>Admin Portal</h3>
-                    <p>Full control over campaigns, advertisers, publishers, and analytics. Manage everything from one powerful dashboard.</p>
-                    <a href="login.php" class="login-btn admin">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Login as Admin
-                    </a>
-                </div>
-                <div class="login-card publisher">
-                    <div class="login-icon publisher">
-                        <i class="fas fa-chart-pie"></i>
-                    </div>
-                    <h3>Publisher Portal</h3>
-                    <p>Track your campaigns, monitor performance metrics, and access detailed reports to optimize your earnings.</p>
-                    <div class="d-flex gap-2 justify-content-center flex-wrap">
-                        <a href="publisher_login.php" class="login-btn publisher">
-                            <i class="fas fa-sign-in-alt"></i>
-                            Login
-                        </a>
-                        <!-- <a href="publisher_register.php" class="login-btn admin" style="background: linear-gradient(135deg, var(--secondary), #f472b6);">
-                            <i class="fas fa-user-plus"></i>
-                            Register
-                        </a> -->
-                    </div>
                 </div>
             </div>
         </div>
