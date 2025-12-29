@@ -50,9 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Current password is incorrect!";
         } else {
             try {
-                // Update password (plain text - no encryption)
+                // Update password with hash
+                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
                 $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-                $stmt->execute([$new_password, $user_id]);
+                $stmt->execute([$hashed_password, $user_id]);
                 
                 $success = "Password changed successfully!";
                 
