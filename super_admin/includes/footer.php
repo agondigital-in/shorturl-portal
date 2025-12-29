@@ -2,16 +2,16 @@
     </main><!-- End main-content -->
     
     <!-- Footer -->
-    <footer class="main-content" style="margin-left: var(--sidebar-width); padding: 0;">
+    <footer class="main-content" style="padding: 0;">
         <div class="content-wrapper pt-0">
-            <div class="card mt-4">
+            <div class="card mt-4" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body py-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center">
-                        <div class="text-muted small">
+                        <div class="text-white small">
                             &copy; <?php echo date('Y'); ?> <strong>Ads Platform</strong>. All rights reserved.
                         </div>
-                        <div class="text-muted small">
-                            <i class="fas fa-code me-1"></i> Version 2.0
+                        <div class="text-white small">
+                            <i class="fas fa-code me-1"></i> Version 2.0 | Made with <i class="fas fa-heart text-danger"></i>
                         </div>
                     </div>
                 </div>

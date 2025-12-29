@@ -150,7 +150,7 @@ $page_title = $page_title ?? 'Super Admin';
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #64748b;
+            color: #94a3b8;
             padding: 0 12px;
             margin-bottom: 8px;
         }
@@ -159,31 +159,33 @@ $page_title = $page_title ?? 'Super Admin';
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 16px;
+            padding: 11px 16px;
             border-radius: 10px;
-            color: #94a3b8;
+            color: #cbd5e1;
             text-decoration: none;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         
         .sidebar-link:hover {
-            background: rgba(255,255,255,0.08);
-            color: #e2e8f0;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            transform: translateX(4px);
         }
         
         .sidebar-link.active {
-            background: var(--primary-gradient);
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
         }
         
         .sidebar-link i {
             width: 20px;
             text-align: center;
-            font-size: 16px;
+            font-size: 15px;
         }
         
         /* Main Content */
@@ -414,19 +416,35 @@ $page_title = $page_title ?? 'Super Admin';
         
         <nav class="sidebar-nav">
             <div class="nav-section">
-                <div class="nav-section-title">Main</div>
+                <div class="nav-section-title">🏠 Main</div>
                 <a href="dashboard.php" class="sidebar-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-home"></i>
+                    <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
-                </a>
-                <a href="campaigns.php" class="sidebar-link <?php echo $current_page === 'campaigns.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-bullhorn"></i>
-                    <span>Campaigns</span>
                 </a>
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">Users</div>
+                <div class="nav-section-title">📢 Campaigns</div>
+                <a href="campaigns.php" class="sidebar-link <?php echo $current_page === 'campaigns.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>All Campaigns</span>
+                </a>
+                <a href="add_campaign.php" class="sidebar-link <?php echo $current_page === 'add_campaign.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Add Campaign</span>
+                </a>
+                <a href="advertiser_campaigns.php" class="sidebar-link <?php echo $current_page === 'advertiser_campaigns.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-ad"></i>
+                    <span>Advertiser Campaigns</span>
+                </a>
+                <a href="publisher_campaigns.php" class="sidebar-link <?php echo $current_page === 'publisher_campaigns.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-link"></i>
+                    <span>Publisher Campaigns</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">👥 Users</div>
                 <a href="advertisers.php" class="sidebar-link <?php echo $current_page === 'advertisers.php' ? 'active' : ''; ?>">
                     <i class="fas fa-building"></i>
                     <span>Advertisers</span>
@@ -442,34 +460,14 @@ $page_title = $page_title ?? 'Super Admin';
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">Campaigns</div>
-                <a href="advertiser_campaigns.php" class="sidebar-link <?php echo $current_page === 'advertiser_campaigns.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-ad"></i>
-                    <span>Advertiser Campaigns</span>
-                </a>
-                <a href="publisher_campaigns.php" class="sidebar-link <?php echo $current_page === 'publisher_campaigns.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-link"></i>
-                    <span>Publisher Campaigns</span>
-                </a>
-                <a href="add_campaign.php" class="sidebar-link <?php echo $current_page === 'add_campaign.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Add Campaign</span>
-                </a>
-            </div>
-            
-            <div class="nav-section">
-                <div class="nav-section-title">Analytics</div>
+                <div class="nav-section-title">📊 Analytics</div>
                 <a href="all_publishers_daily_clicks.php" class="sidebar-link <?php echo $current_page === 'all_publishers_daily_clicks.php' ? 'active' : ''; ?>">
                     <i class="fas fa-chart-bar"></i>
                     <span>Publishers Stats</span>
                 </a>
-                <a href="publisher_daily_clicks.php" class="sidebar-link <?php echo $current_page === 'publisher_daily_clicks.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-mouse-pointer"></i>
-                    <span>Daily Clicks</span>
-                </a>
-                <a href="campaign_tracking_stats.php" class="sidebar-link <?php echo $current_page === 'campaign_tracking_stats.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-crosshairs"></i>
-                    <span>Tracking Stats</span>
+                <a href="daily_leads_entry.php" class="sidebar-link <?php echo $current_page === 'daily_leads_entry.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-edit"></i>
+                    <span>Daily Leads Entry</span>
                 </a>
                 <a href="daily_report.php" class="sidebar-link <?php echo $current_page === 'daily_report.php' ? 'active' : ''; ?>">
                     <i class="fas fa-calendar-day"></i>
@@ -478,7 +476,7 @@ $page_title = $page_title ?? 'Super Admin';
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">CPV</div>
+                <div class="nav-section-title">👁️ CPV</div>
                 <a href="cpv.php" class="sidebar-link <?php echo $current_page === 'cpv.php' ? 'active' : ''; ?>">
                     <i class="fas fa-eye"></i>
                     <span>CPV Campaigns</span>
@@ -487,25 +485,25 @@ $page_title = $page_title ?? 'Super Admin';
                     <i class="fas fa-chart-pie"></i>
                     <span>CPV Report</span>
                 </a>
-                <a href="cpv_stats.php" class="sidebar-link <?php echo $current_page === 'cpv_stats.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-chart-area"></i>
-                    <span>CPV Stats</span>
-                </a>
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">Finance</div>
+                <div class="nav-section-title">💰 Finance</div>
                 <a href="payment_reports.php" class="sidebar-link <?php echo $current_page === 'payment_reports.php' ? 'active' : ''; ?>">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Payment Reports</span>
                 </a>
+                <a href="ie_budget.php" class="sidebar-link <?php echo $current_page === 'ie_budget.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-newspaper"></i>
+                    <span>IE Budget</span>
+                </a>
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">Settings</div>
-                <a href="manage_admins.php" class="sidebar-link <?php echo $current_page === 'manage_admins.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-users-cog"></i>
-                    <span>Manage Admins</span>
+                <div class="nav-section-title">⚙️ Settings</div>
+                <a href="change_password.php" class="sidebar-link <?php echo $current_page === 'change_password.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-key"></i>
+                    <span>Change Password</span>
                 </a>
             </div>
         </nav>
