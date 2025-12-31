@@ -75,14 +75,3 @@ CREATE TABLE IF NOT EXISTS `campaign_publishers` (
     FOREIGN KEY (`publisher_id`) REFERENCES `publishers`(`id`) ON DELETE CASCADE,
     UNIQUE KEY `unique_campaign_publisher` (`campaign_id`, `publisher_id`)
 );
-
--- Insert default super admin user
-INSERT INTO `users` (`username`, `password`, `role`) VALUES 
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'super_admin');
-
--- Sample data (optional)
--- INSERT INTO `advertisers` (`name`, `email`, `company`, `phone`) VALUES 
--- ('Sample Advertiser', 'advertiser@example.com', 'Advertise Inc.', '123-456-7890');
--- 
--- INSERT INTO `publishers` (`name`, `email`, `website`, `phone`) VALUES 
--- ('Sample Publisher', 'publisher@example.com', 'https://publisher.com', '098-765-4321');

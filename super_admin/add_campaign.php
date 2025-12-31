@@ -12,6 +12,10 @@ function generatePublisherShortcode($baseCode, $publisherId, $length = 4) {
     return $baseCode . substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, $length);
 }
 
+function generatePixelCode($length = 12) {
+    return 'PX' . substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz'), 0, $length);
+}
+
 $campaign_name = '';
 $target_url = '';
 $start_date = date('Y-m-d');
@@ -32,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $advertiser_payout = $_POST['advertiser_payout'] ?? '0';
     $publisher_payout = $_POST['publisher_payout'] ?? '0';
     $campaign_type = $_POST['campaign_type'] ?? 'None';
+    $enable_image_pixel = isset($_POST['enable_image_pixel']) ? 1 : 0;
     $advertiser_ids = $_POST['advertiser_ids'] ?? [];
     $publisher_ids = $_POST['publisher_ids'] ?? [];
     
@@ -66,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $conn->beginTransaction();
             
-            $stmt = $conn->prepare("INSERT INTO campaigns (name, shortcode, target_url, start_date, end_date, advertiser_payout, publisher_payout, campaign_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$campaign_name, $base_shortcode, $target_url, $start_date, $end_date, $advertiser_payout, $publisher_payout, $campaign_type]);
+            $stmt = $conn->prepare("INSERT INTO campaigns (name, shortcode, target_url, start_date, end_date, advertiser_payout, publisher_payout, campaign_type, enable_image_pixel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$campaign_name, $base_shortcode, $target_url, $start_date, $end_date, $advertiser_payout, $publisher_payout, $campaign_type, $enable_image_pixel]);
             
             $campaign_id = $conn->lastInsertId();
             
@@ -79,11 +84,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!empty($publisher_ids)) {
                 $publisher_stmt = $conn->prepare("INSERT INTO campaign_publishers (campaign_id, publisher_id) VALUES (?, ?)");
                 $shortcode_stmt = $conn->prepare("INSERT INTO publisher_short_codes (campaign_id, publisher_id, short_code) VALUES (?, ?, ?)");
+                $pixel_stmt = $conn->prepare("INSERT INTO image_pixel_links (campaign_id, publisher_id, pixel_code, pixel_url) VALUES (?, ?, ?, ?)");
+                
+                $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                $base_url = rtrim($base_url, '/');
                 
                 foreach ($publisher_ids as $publisher_id) {
                     $publisher_stmt->execute([$campaign_id, $publisher_id]);
                     $publisher_shortcode = generatePublisherShortcode($base_shortcode, $publisher_id);
                     $shortcode_stmt->execute([$campaign_id, $publisher_id, $publisher_shortcode]);
+                    
+                    // Generate image pixel link if enabled
+                    if ($enable_image_pixel) {
+                        $pixel_code = generatePixelCode();
+                        $pixel_url = $base_url . "/pixel.php?p=" . $pixel_code;
+                        $pixel_stmt->execute([$campaign_id, $publisher_id, $pixel_code, $pixel_url]);
+                    }
                 }
             }
             
@@ -187,6 +203,19 @@ try {
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Publisher Payout (₹)</label>
                     <input type="number" class="form-control" name="publisher_payout" step="0.01" min="0" value="<?php echo htmlspecialchars($publisher_payout); ?>" placeholder="0.00">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Image Pixel Tracking</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="enable_image_pixel" id="enable_image_pixel" value="1">
+                        <label class="form-check-label" for="enable_image_pixel">
+                            <strong>Enable Image Pixel</strong> - Har publisher ke liye unique pixel link generate hoga
+                        </label>
+                    </div>
+                    <small class="text-muted">Yes select karne par har publisher ko ek unique image pixel URL milega jo impression track karega</small>
                 </div>
             </div>
             

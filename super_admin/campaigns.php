@@ -50,6 +50,7 @@ try {
     
     $stmt = $conn->prepare("
         SELECT c.*, 
+               c.enable_image_pixel,
                GROUP_CONCAT(DISTINCT a.name) as advertiser_names,
                GROUP_CONCAT(DISTINCT p.name) as publisher_names
         FROM campaigns c
@@ -213,6 +214,11 @@ try {
                                         <a href="campaign_tracking_stats.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-info btn-sm" title="Stats">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
+                                        <?php if (!empty($campaign['enable_image_pixel'])): ?>
+                                        <a href="campaign_pixel_links.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-primary btn-sm" title="Pixel Links">
+                                            <i class="fas fa-image"></i>
+                                        </a>
+                                        <?php endif; ?>
                                         <a href="edit_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-soft-warning btn-sm" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>

@@ -8,6 +8,10 @@ function generatePublisherShortcode($length = 8) {
     return 'CAMP' . substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, $length);
 }
 
+function generatePixelCode($length = 12) {
+    return 'PX' . substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz'), 0, $length);
+}
+
 $campaign_id = $_GET['id'] ?? '';
 $error = '';
 $success = '';
@@ -49,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $target_url = trim($_POST['target_url'] ?? '');
     $advertiser_payout = $_POST['advertiser_payout'] ?? '0';
     $publisher_payout = $_POST['publisher_payout'] ?? '0';
+    $enable_image_pixel = isset($_POST['enable_image_pixel']) ? 1 : 0;
     $advertiser_ids = $_POST['advertiser_ids'] ?? [];
     $publisher_ids = $_POST['publisher_ids'] ?? [];
     
@@ -62,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conn->beginTransaction();
             
-            $stmt = $conn->prepare("UPDATE campaigns SET target_url = ?, advertiser_payout = ?, publisher_payout = ? WHERE id = ?");
-            $stmt->execute([$target_url, $advertiser_payout, $publisher_payout, $campaign_id]);
+            $stmt = $conn->prepare("UPDATE campaigns SET target_url = ?, advertiser_payout = ?, publisher_payout = ?, enable_image_pixel = ? WHERE id = ?");
+            $stmt->execute([$target_url, $advertiser_payout, $publisher_payout, $enable_image_pixel, $campaign_id]);
             
             $stmt = $conn->prepare("DELETE FROM campaign_advertisers WHERE campaign_id = ?");
             $stmt->execute([$campaign_id]);
@@ -89,10 +94,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!empty($publishers_to_add)) {
                 $stmt = $conn->prepare("INSERT INTO campaign_publishers (campaign_id, publisher_id) VALUES (?, ?)");
                 $shortcode_stmt = $conn->prepare("INSERT INTO publisher_short_codes (campaign_id, publisher_id, short_code) VALUES (?, ?, ?)");
+                $pixel_stmt = $conn->prepare("INSERT INTO image_pixel_links (campaign_id, publisher_id, pixel_code, pixel_url) VALUES (?, ?, ?, ?)");
+                
+                $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                $base_url = rtrim($base_url, '/');
+                
                 foreach ($publishers_to_add as $publisher_id) {
                     $stmt->execute([$campaign_id, $publisher_id]);
                     $publisher_shortcode = generatePublisherShortcode();
                     $shortcode_stmt->execute([$campaign_id, $publisher_id, $publisher_shortcode]);
+                    
+                    // Generate pixel link if enabled
+                    if ($enable_image_pixel) {
+                        $pixel_code = generatePixelCode();
+                        $pixel_url = $base_url . "/pixel.php?p=" . $pixel_code;
+                        $pixel_stmt->execute([$campaign_id, $publisher_id, $pixel_code, $pixel_url]);
+                    }
+                }
+            }
+            
+            // Generate pixel links for existing publishers if image pixel was just enabled
+            if ($enable_image_pixel) {
+                $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                $base_url = rtrim($base_url, '/');
+                
+                // Get publishers who don't have pixel links yet
+                $stmt = $conn->prepare("
+                    SELECT cp.publisher_id 
+                    FROM campaign_publishers cp 
+                    LEFT JOIN image_pixel_links ipl ON cp.campaign_id = ipl.campaign_id AND cp.publisher_id = ipl.publisher_id
+                    WHERE cp.campaign_id = ? AND ipl.id IS NULL
+                ");
+                $stmt->execute([$campaign_id]);
+                $publishers_without_pixels = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+                
+                if (!empty($publishers_without_pixels)) {
+                    $pixel_stmt = $conn->prepare("INSERT INTO image_pixel_links (campaign_id, publisher_id, pixel_code, pixel_url) VALUES (?, ?, ?, ?)");
+                    foreach ($publishers_without_pixels as $publisher_id) {
+                        $pixel_code = generatePixelCode();
+                        $pixel_url = $base_url . "/pixel.php?p=" . $pixel_code;
+                        $pixel_stmt->execute([$campaign_id, $publisher_id, $pixel_code, $pixel_url]);
+                    }
                 }
             }
             
@@ -174,6 +216,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Publisher Payout (₹)</label>
                     <input type="number" class="form-control" name="publisher_payout" step="0.01" min="0" value="<?php echo htmlspecialchars($campaign['publisher_payout']); ?>">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Image Pixel Tracking</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="enable_image_pixel" id="enable_image_pixel" value="1" <?php echo !empty($campaign['enable_image_pixel']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="enable_image_pixel">
+                            <strong>Enable Image Pixel</strong> - Har publisher ke liye unique pixel link generate hoga
+                        </label>
+                    </div>
+                    <small class="text-muted">Enable karne par har publisher ko ek unique image pixel URL milega</small>
+                    <?php if (!empty($campaign['enable_image_pixel'])): ?>
+                        <div class="mt-2">
+                            <a href="campaign_pixel_links.php?id=<?php echo $campaign_id; ?>" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-image me-1"></i>View Pixel Links
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
             
