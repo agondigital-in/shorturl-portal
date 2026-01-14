@@ -497,6 +497,10 @@ $page_title = $page_title ?? 'Super Admin';
                     <i class="fas fa-newspaper"></i>
                     <span>IE Budget</span>
                 </a>
+                <a href="office_expenses.php" class="sidebar-link <?php echo $current_page === 'office_expenses.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-wallet"></i>
+                    <span>Office Expenses</span>
+                </a>
             </div>
             
             <div class="nav-section">
