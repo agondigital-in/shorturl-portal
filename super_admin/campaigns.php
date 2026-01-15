@@ -65,7 +65,7 @@ try {
 .btn-add { background: #6366f1; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
 .btn-add:hover { background: #4f46e5; color: #fff; }
 
-.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
 .stat-item { background: #fff; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #e2e8f0; }
 .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
 .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
@@ -140,10 +140,6 @@ try {
         <div class="stat-icon orange"><i class="fas fa-pause"></i></div>
         <div class="stat-info"><h4><?php echo $inactive_count; ?></h4><span>Inactive</span></div>
     </div>
-    <div class="stat-item">
-        <div class="stat-icon blue"><i class="fas fa-mouse-pointer"></i></div>
-        <div class="stat-info"><h4><?php echo number_format($total_clicks); ?></h4><span>Clicks</span></div>
-    </div>
 </div>
 
 <div class="cp-table-wrap">
@@ -166,7 +162,6 @@ try {
                 <th>Advertiser</th>
                 <th>Publisher</th>
                 <th>Type</th>
-                <th>Clicks</th>
                 <th>Payout</th>
                 <th>Status</th>
                 <th>Payment</th>
@@ -181,7 +176,6 @@ try {
                 <td><div class="camp-adv" title="<?php echo htmlspecialchars($c['advertiser_names'] ?? '-'); ?>"><?php echo htmlspecialchars($c['advertiser_names'] ?? '-'); ?></div></td>
                 <td><div class="camp-pub" title="<?php echo htmlspecialchars($c['publisher_names'] ?? '-'); ?>"><?php echo htmlspecialchars($c['publisher_names'] ?? '-'); ?></div></td>
                 <td><span class="badge-type"><?php echo $c['campaign_type']; ?></span></td>
-                <td><strong><?php echo number_format($c['click_count']); ?></strong></td>
                 <td class="payout-col">
                     <span class="adv">A:₹<?php echo number_format($c['advertiser_payout'],0); ?></span><br>
                     <span class="pub">P:₹<?php echo number_format($c['publisher_payout'],0); ?></span>
