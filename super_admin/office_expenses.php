@@ -52,6 +52,7 @@ if ($count == 0) {
 }
 
 // Handle Add Expense
+$redirect = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'add') {
         $stmt = $conn->prepare("INSERT INTO office_expenses (expense_date, category, description, amount, payment_mode, receipt_no, notes) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -64,15 +65,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $_POST['receipt_no'],
             $_POST['notes']
         ]);
-        $success = "Expense added successfully!";
+        $redirect = "office_expenses.php?success=1";
     }
     
     if ($_POST['action'] === 'delete') {
         $stmt = $conn->prepare("DELETE FROM office_expenses WHERE id = ?");
         $stmt->execute([$_POST['expense_id']]);
-        $success = "Expense deleted!";
+        $redirect = "office_expenses.php?deleted=1";
     }
 }
+
+$success = isset($_GET['success']) ? "Expense added successfully!" : null;
+$success = isset($_GET['deleted']) ? "Expense deleted!" : $success;
 
 // Get filter values
 $filter_month = $_GET['month'] ?? date('Y-m');
@@ -309,3 +313,7 @@ $category_totals = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <?php require_once 'includes/footer.php'; ?>
+
+<?php if ($redirect): ?>
+<script>window.location.href = '<?php echo $redirect; ?>';</script>
+<?php endif; ?>
