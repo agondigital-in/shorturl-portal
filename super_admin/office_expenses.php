@@ -10,7 +10,7 @@ $conn = $db->getConnection();
 // Create tables if not exist
 $conn->exec("CREATE TABLE IF NOT EXISTS expense_categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     icon VARCHAR(50) DEFAULT 'fas fa-receipt',
     color VARCHAR(20) DEFAULT '#6366f1',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -28,10 +28,17 @@ $conn->exec("CREATE TABLE IF NOT EXISTS office_expenses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// Insert default categories if empty
+// Clear and insert default categories (to fix duplicates)
 $stmt = $conn->query("SELECT COUNT(*) FROM expense_categories");
-if ($stmt->fetchColumn() == 0) {
-    $conn->exec("INSERT INTO expense_categories (name, icon, color) VALUES
+$count = $stmt->fetchColumn();
+if ($count > 10) {
+    // Duplicates exist, clear and re-insert
+    $conn->exec("TRUNCATE TABLE expense_categories");
+    $count = 0;
+}
+
+if ($count == 0) {
+    $conn->exec("INSERT IGNORE INTO expense_categories (name, icon, color) VALUES
         ('Electricity Bill', 'fas fa-bolt', '#f59e0b'),
         ('Water Bill', 'fas fa-tint', '#3b82f6'),
         ('Office Rent', 'fas fa-building', '#8b5cf6'),
