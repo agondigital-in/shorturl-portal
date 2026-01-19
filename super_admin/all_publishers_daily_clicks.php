@@ -11,6 +11,8 @@ $conn = $db->getConnection();
 $filter_type = $_GET['filter'] ?? 'custom';
 $start_date = $_GET['start_date'] ?? date('Y-m-d', strtotime('-30 days'));
 $end_date = $_GET['end_date'] ?? date('Y-m-d');
+$publisher_filter = $_GET['publisher_id'] ?? '';
+$campaign_filter = $_GET['campaign_id'] ?? '';
 
 if (isset($_GET['filter'])) {
     switch ($_GET['filter']) {
@@ -33,7 +35,18 @@ if (isset($_GET['filter'])) {
     }
 }
 
-$stmt = $conn->prepare("
+// Get all publishers for dropdown
+$pub_stmt = $conn->prepare("SELECT id, name FROM publishers ORDER BY name ASC");
+$pub_stmt->execute();
+$all_publishers = $pub_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get all campaigns for dropdown
+$camp_stmt = $conn->prepare("SELECT id, name FROM campaigns ORDER BY name ASC");
+$camp_stmt->execute();
+$all_campaigns = $camp_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Build query with filters
+$query = "
     SELECT 
         p.name as publisher_name,
         p.id as publisher_id,
@@ -45,10 +58,24 @@ $stmt = $conn->prepare("
     JOIN publishers p ON pdc.publisher_id = p.id
     JOIN campaigns c ON pdc.campaign_id = c.id
     WHERE pdc.click_date BETWEEN ? AND ?
-    GROUP BY p.id, p.name, c.id, c.name
-    ORDER BY p.name ASC, total_clicks DESC
-");
-$stmt->execute([$start_date, $end_date]);
+";
+
+$params = [$start_date, $end_date];
+
+if (!empty($publisher_filter)) {
+    $query .= " AND p.id = ?";
+    $params[] = $publisher_filter;
+}
+
+if (!empty($campaign_filter)) {
+    $query .= " AND c.id = ?";
+    $params[] = $campaign_filter;
+}
+
+$query .= " GROUP BY p.id, p.name, c.id, c.name ORDER BY p.name ASC, total_clicks DESC";
+
+$stmt = $conn->prepare($query);
+$stmt->execute($params);
 $publisher_summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $total_period_clicks = 0;
@@ -88,17 +115,38 @@ foreach ($publisher_summary as $p) {
             <div class="col-lg-7">
                 <form method="GET" class="row g-2">
                     <input type="hidden" name="filter" value="custom">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">Start Date</label>
                         <input type="date" class="form-control" name="start_date" value="<?php echo $start_date; ?>">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">End Date</label>
                         <input type="date" class="form-control" name="end_date" value="<?php echo $end_date; ?>">
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-2"></i>Apply</button>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Publisher</label>
+                        <select class="form-control" name="publisher_id">
+                            <option value="">All Publishers</option>
+                            <?php foreach ($all_publishers as $pub): ?>
+                                <option value="<?php echo $pub['id']; ?>" <?php echo ($publisher_filter == $pub['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($pub['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Campaign</label>
+                        <select class="form-control" name="campaign_id">
+                            <option value="">All Campaigns</option>
+                            <?php foreach ($all_campaigns as $camp): ?>
+                                <option value="<?php echo $camp['id']; ?>" <?php echo ($campaign_filter == $camp['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($camp['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-2"></i>Apply Filters</button>
                     </div>
                 </form>
             </div>
