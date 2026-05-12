@@ -1,7 +1,5 @@
 <?php
 // super_admin/publisher_daily_clicks.php - View daily click statistics
-$page_title = 'Daily Clicks';
-require_once 'includes/header.php';
 require_once '../db_connection.php';
 
 $db = Database::getInstance();
@@ -22,6 +20,10 @@ if (!$campaign) {
     header('Location: campaigns.php');
     exit();
 }
+
+// Now include header after redirect checks
+$page_title = 'Daily Clicks';
+require_once 'includes/header.php';
 
 $filter_type = $_GET['filter'] ?? 'custom';
 $start_date = $_GET['start_date'] ?? date('Y-m-d', strtotime('-30 days'));

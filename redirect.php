@@ -43,8 +43,10 @@ if (empty($publisher_id) && !empty($short_code)) {
             ");
             $stmt->execute([$campaign_id, $publisher_id, $today]);
             
-            // Redirect to the target URL
-            header("Location: " . $result['target_url'], true, 302);
+            // Redirect to the target URL with publisher ID appended at the end
+            $target_url = $result['target_url'];
+            $redirect_url = rtrim($target_url, '/') . '_' . $publisher_id;
+            header("Location: " . $redirect_url, true, 302);
             exit();
         }
     } catch (PDOException $e) {
@@ -149,8 +151,10 @@ try {
         }
     }
     
-    // Redirect to the target URL
-    header("Location: " . $result['target_url'], true, 302);
+    // Redirect to the target URL with publisher ID appended at the end
+    $target_url = $result['target_url'];
+    $redirect_url = rtrim($target_url, '/') . '_' . $publisher_id;
+    header("Location: " . $redirect_url, true, 302);
     exit();
     
 } catch (PDOException $e) {
