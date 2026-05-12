@@ -51,6 +51,7 @@ try {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $target_url = trim($_POST['target_url'] ?? '');
+    $end_date = $_POST['end_date'] ?? '';
     $advertiser_payout = $_POST['advertiser_payout'] ?? '0';
     $publisher_payout = $_POST['publisher_payout'] ?? '0';
     $enable_image_pixel = isset($_POST['enable_image_pixel']) ? 1 : 0;
@@ -59,6 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($target_url)) {
         $error = 'Website URL is required.';
+    } elseif (empty($end_date)) {
+        $error = 'End date is required.';
+    } elseif (strtotime($end_date) <= strtotime($campaign['start_date'])) {
+        $error = 'End date must be after start date.';
     } elseif (empty($advertiser_ids)) {
         $error = 'At least one advertiser must be selected.';
     } elseif (empty($publisher_ids)) {
@@ -67,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conn->beginTransaction();
             
-            $stmt = $conn->prepare("UPDATE campaigns SET target_url = ?, advertiser_payout = ?, publisher_payout = ?, enable_image_pixel = ? WHERE id = ?");
-            $stmt->execute([$target_url, $advertiser_payout, $publisher_payout, $enable_image_pixel, $campaign_id]);
+            $stmt = $conn->prepare("UPDATE campaigns SET target_url = ?, end_date = ?, advertiser_payout = ?, publisher_payout = ?, enable_image_pixel = ? WHERE id = ?");
+            $stmt->execute([$target_url, $end_date, $advertiser_payout, $publisher_payout, $enable_image_pixel, $campaign_id]);
             
             $stmt = $conn->prepare("DELETE FROM campaign_advertisers WHERE campaign_id = ?");
             $stmt->execute([$campaign_id]);
@@ -207,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">End Date</label>
-                    <input type="date" class="form-control" value="<?php echo htmlspecialchars($campaign['end_date']); ?>" disabled>
+                    <input type="date" class="form-control" name="end_date" value="<?php echo htmlspecialchars($campaign['end_date']); ?>">
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Advertiser Payout (₹)</label>
