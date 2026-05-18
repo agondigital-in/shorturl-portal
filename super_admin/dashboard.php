@@ -20,6 +20,10 @@ try {
     $stmt->execute();
     $publishers_count = $stmt->fetch()['count'];
     
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM agencies");
+    $stmt->execute();
+    $agencies_count = $stmt->fetch()['count'] ?? 0;
+    
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM users WHERE role IN ('admin', 'super_admin')");
     $stmt->execute();
     $admins_count = $stmt->fetch()['count'];
@@ -851,9 +855,9 @@ try {
         <h3><?php echo $publishers_count; ?></h3>
     </div>
     <div class="stat-box">
-        <div class="stat-icon red"><i class="fas fa-user-cog"></i></div>
-        <span>Admin Users</span>
-        <h3><?php echo $admins_count; ?></h3>
+        <div class="stat-icon red"><i class="fas fa-handshake"></i></div>
+        <span>Agencies</span>
+        <h3><?php echo $agencies_count; ?></h3>
     </div>
     <div class="stat-box">
         <div class="stat-icon cyan"><i class="fas fa-hand-pointer"></i></div>

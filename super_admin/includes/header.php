@@ -1294,6 +1294,10 @@ $page_title = $page_title ?? 'Super Admin';
                     <i class="fas fa-users"></i>
                     <span>Publishers</span>
                 </a>
+                <a href="agencies.php" class="sidebar-link <?php echo $current_page === 'agencies.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-handshake"></i>
+                    <span>Agencies</span>
+                </a>
                 <a href="admins.php" class="sidebar-link <?php echo $current_page === 'admins.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user-cog"></i>
                     <span>Admins</span>

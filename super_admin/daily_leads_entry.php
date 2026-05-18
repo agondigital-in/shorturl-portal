@@ -83,6 +83,8 @@ if ($filter === 'all') {
             c.id, 
             c.name, 
             c.shortcode,
+            c.click_count,
+            ag.name as agency_name,
             COALESCE((SELECT SUM(leads_count) FROM campaign_daily_leads WHERE campaign_id = c.id), 0) as total_leads,
             COALESCE(
                 (SELECT MAX(lead_date) FROM campaign_daily_leads WHERE campaign_id = c.id),
@@ -95,10 +97,18 @@ if ($filter === 'all') {
             MONTH(COALESCE(
                 (SELECT MAX(lead_date) FROM campaign_daily_leads WHERE campaign_id = c.id),
                 CURDATE()
-            )) as lead_month
+            )) as lead_month,
+            CASE 
+                WHEN DATE(COALESCE(
+                    (SELECT MAX(lead_date) FROM campaign_daily_leads WHERE campaign_id = c.id),
+                    CURDATE()
+                )) = CURDATE() THEN 1 
+                ELSE 0 
+            END as is_today
         FROM campaigns c
+        LEFT JOIN agencies ag ON c.agency_id = ag.id
         WHERE c.status = 'active'
-        ORDER BY lead_year DESC, lead_month DESC, c.name ASC
+        ORDER BY is_today DESC, total_leads DESC, c.name ASC
     ");
     $stmt->execute();
     $all_campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -125,8 +135,11 @@ if ($filter === 'all') {
 } else {
     $stmt = $conn->prepare("
         SELECT c.id, c.name, c.shortcode,
+               c.click_count,
+               ag.name as agency_name,
                COALESCE((SELECT SUM(leads_count) FROM campaign_daily_leads WHERE campaign_id = c.id), 0) as total_leads
         FROM campaigns c
+        LEFT JOIN agencies ag ON c.agency_id = ag.id
         WHERE $where_clause
         ORDER BY c.name
     ");
@@ -437,7 +450,9 @@ if ($filter === 'all') {
                     <tr>
                         <th style="width: 60px;">#</th>
                         <th>Campaign Name</th>
+                        <th>Agency</th>
                         <th>Shortcode</th>
+                        <th>Clicks</th>
                         <th>Leads</th>
                         <th style="width: 220px;">Actions</th>
                     </tr>
@@ -460,7 +475,7 @@ if ($filter === 'all') {
                     ?>
                     <!-- Month Header Row -->
                     <tr style="background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);">
-                        <td colspan="5" style="padding: 15px 20px;">
+                        <td colspan="7" style="padding: 15px 20px;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span style="color: white; font-weight: 600; font-size: 1.1rem;">
                                     <i class="fas fa-calendar-alt me-2"></i><?php echo $month_name . ' ' . $year; ?>
@@ -474,10 +489,23 @@ if ($filter === 'all') {
                     
                     <!-- Campaigns for this month -->
                     <?php foreach ($period_campaigns as $c): ?>
-                    <tr>
+                    <?php 
+                    $is_today = isset($c['is_today']) && $c['is_today'] == 1;
+                    $row_class = $is_today ? 'style="background: linear-gradient(90deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #10b981;"' : '';
+                    ?>
+                    <tr <?php echo $row_class; ?>>
                         <td><div class="row-number"><?php echo $global_index++; ?></div></td>
-                        <td><span class="campaign-name"><?php echo htmlspecialchars($c['name']); ?></span></td>
+                        <td>
+                            <span class="campaign-name"><?php echo htmlspecialchars($c['name']); ?></span>
+                            <?php if ($is_today): ?>
+                            <span class="badge bg-success text-white ms-2" style="font-size: 0.7rem; padding: 4px 8px;">
+                                <i class="fas fa-calendar-day"></i> TODAY
+                            </span>
+                            <?php endif; ?>
+                        </td>
+                        <td><span class="badge bg-info text-white"><?php echo htmlspecialchars($c['agency_name'] ?? 'N/A'); ?></span></td>
                         <td><span class="shortcode-badge"><?php echo htmlspecialchars($c['shortcode']); ?></span></td>
+                        <td><span class="badge bg-primary text-white" style="font-size: 0.9rem; padding: 8px 14px;"><?php echo number_format($c['click_count'] ?? 0); ?></span></td>
                         <td><span class="leads-badge"><?php echo number_format($c['total_leads']); ?></span></td>
                         <td>
                             <button class="btn action-btn btn-enter" data-bs-toggle="modal" data-bs-target="#addModal<?php echo $c['id']; ?>">
@@ -542,7 +570,9 @@ if ($filter === 'all') {
                     <tr>
                         <th style="width: 60px;">#</th>
                         <th>Campaign Name</th>
+                        <th>Agency</th>
                         <th>Shortcode</th>
+                        <th>Clicks</th>
                         <th>Leads</th>
                         <th style="width: 220px;">Actions</th>
                     </tr>
@@ -550,7 +580,7 @@ if ($filter === 'all') {
                 <tbody>
                     <?php if (empty($campaigns)): ?>
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
                             <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
                             <p class="text-muted mb-0">No active campaigns found</p>
                         </td>
@@ -560,7 +590,9 @@ if ($filter === 'all') {
                     <tr>
                         <td><div class="row-number"><?php echo $i + 1; ?></div></td>
                         <td><span class="campaign-name"><?php echo htmlspecialchars($c['name']); ?></span></td>
+                        <td><span class="badge bg-info text-white"><?php echo htmlspecialchars($c['agency_name'] ?? 'N/A'); ?></span></td>
                         <td><span class="shortcode-badge"><?php echo htmlspecialchars($c['shortcode']); ?></span></td>
+                        <td><span class="badge bg-primary text-white" style="font-size: 0.9rem; padding: 8px 14px;"><?php echo number_format($c['click_count'] ?? 0); ?></span></td>
                         <td><span class="leads-badge"><?php echo number_format($c['total_leads']); ?></span></td>
                         <td>
                             <button class="btn action-btn btn-enter" data-bs-toggle="modal" data-bs-target="#addModal<?php echo $c['id']; ?>">

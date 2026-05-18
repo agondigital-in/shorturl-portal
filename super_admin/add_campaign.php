@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $publisher_payout = $_POST['publisher_payout'] ?? '0';
     $campaign_type = $_POST['campaign_type'] ?? 'None';
     $enable_image_pixel = isset($_POST['enable_image_pixel']) ? 1 : 0;
+    $agency_id = $_POST['agency_id'] ?? null;
     $advertiser_ids = $_POST['advertiser_ids'] ?? [];
     $publisher_ids = $_POST['publisher_ids'] ?? [];
     
@@ -71,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $conn->beginTransaction();
             
-            $stmt = $conn->prepare("INSERT INTO campaigns (name, shortcode, target_url, start_date, end_date, advertiser_payout, publisher_payout, campaign_type, enable_image_pixel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$campaign_name, $base_shortcode, $target_url, $start_date, $end_date, $advertiser_payout, $publisher_payout, $campaign_type, $enable_image_pixel]);
+            $stmt = $conn->prepare("INSERT INTO campaigns (name, shortcode, target_url, start_date, end_date, advertiser_payout, publisher_payout, campaign_type, enable_image_pixel, agency_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$campaign_name, $base_shortcode, $target_url, $start_date, $end_date, $advertiser_payout, $publisher_payout, $campaign_type, $enable_image_pixel, $agency_id]);
             
             $campaign_id = $conn->lastInsertId();
             
@@ -130,6 +131,10 @@ try {
     $stmt = $conn->prepare("SELECT id, name FROM publishers ORDER BY name");
     $stmt->execute();
     $publishers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $stmt = $conn->prepare("SELECT id, name FROM agencies ORDER BY name");
+    $stmt->execute();
+    $agencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $error = "Error loading data: " . $e->getMessage();
 }
@@ -513,12 +518,26 @@ try {
                     </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label class="form-label">
-                        <i class="fas fa-link"></i>
-                        Website URL <span class="text-danger">*</span>
-                    </label>
-                    <input type="url" class="form-control" name="target_url" value="<?php echo htmlspecialchars($target_url); ?>" placeholder="https://example.com" required>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-handshake"></i>
+                            Select Agency
+                        </label>
+                        <select class="form-select" name="agency_id">
+                            <option value="">-- Select Agency (Optional) --</option>
+                            <?php foreach ($agencies as $agency): ?>
+                                <option value="<?php echo $agency['id']; ?>"><?php echo htmlspecialchars($agency['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-link"></i>
+                            Website URL <span class="text-danger">*</span>
+                        </label>
+                        <input type="url" class="form-control" name="target_url" value="<?php echo htmlspecialchars($target_url); ?>" placeholder="https://example.com" required>
+                    </div>
                 </div>
             </div>
             

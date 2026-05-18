@@ -39,9 +39,11 @@ try {
     $conn = $db->getConnection();
     $stmt = $conn->prepare("
         SELECT c.*, c.enable_image_pixel,
+               ag.name as agency_name,
                GROUP_CONCAT(DISTINCT a.name) as advertiser_names,
                GROUP_CONCAT(DISTINCT p.name) as publisher_names
         FROM campaigns c
+        LEFT JOIN agencies ag ON c.agency_id = ag.id
         LEFT JOIN campaign_advertisers ca ON c.id = ca.campaign_id
         LEFT JOIN advertisers a ON ca.advertiser_id = a.id
         LEFT JOIN campaign_publishers cp ON c.id = cp.campaign_id
@@ -565,6 +567,7 @@ try {
                 <tr>
                     <th><i class="fas fa-hashtag"></i> ID</th>
                     <th><i class="fas fa-tag"></i> Campaign Name</th>
+                    <th><i class="fas fa-handshake"></i> Agency</th>
                     <th><i class="fas fa-briefcase"></i> Advertiser</th>
                     <th><i class="fas fa-users"></i> Publisher</th>
                     <th><i class="fas fa-layer-group"></i> Type</th>
@@ -579,6 +582,7 @@ try {
                 <tr>
                     <td><strong><?php echo $c['id']; ?></strong></td>
                     <td class="camp-name"><?php echo htmlspecialchars($c['name']); ?></td>
+                    <td><span class="badge bg-info text-white" style="font-size: 0.85rem; padding: 6px 12px;"><?php echo htmlspecialchars($c['agency_name'] ?? 'N/A'); ?></span></td>
                     <td><div class="camp-adv" title="<?php echo htmlspecialchars($c['advertiser_names'] ?? '-'); ?>"><?php echo htmlspecialchars($c['advertiser_names'] ?? '-'); ?></div></td>
                     <td><div class="camp-pub" title="<?php echo htmlspecialchars($c['publisher_names'] ?? '-'); ?>"><?php echo htmlspecialchars($c['publisher_names'] ?? '-'); ?></div></td>
                     <td><span class="badge-type"><?php echo $c['campaign_type']; ?></span></td>
