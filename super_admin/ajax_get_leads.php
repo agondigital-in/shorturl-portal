@@ -56,20 +56,29 @@ $target = $campaign['target_leads'] ?? 0;
                 <th>Date</th>
                 <th>Day</th>
                 <th class="text-end">Leads</th>
+                <th class="text-center" style="width: 120px;">Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($leads as $row): ?>
-            <tr>
+            <tr id="lead-row-<?php echo $campaign_id; ?>-<?php echo $row['lead_date']; ?>">
                 <td><?php echo date('d M Y', strtotime($row['lead_date'])); ?></td>
                 <td><?php echo date('l', strtotime($row['lead_date'])); ?></td>
                 <td class="text-end"><strong><?php echo number_format($row['leads_count']); ?></strong></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-warning" onclick="editLead(<?php echo $campaign_id; ?>, '<?php echo $row['lead_date']; ?>', <?php echo $row['leads_count']; ?>)" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteLead(<?php echo $campaign_id; ?>, '<?php echo $row['lead_date']; ?>')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
         <tfoot class="table-primary">
             <tr>
-                <th colspan="2">Total</th>
+                <th colspan="3">Total</th>
                 <th class="text-end"><?php echo number_format($total); ?></th>
             </tr>
         </tfoot>

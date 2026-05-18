@@ -910,6 +910,88 @@ function printSelectedMonthLeads() {
             alert('Error loading data for print');
         });
 }
+
+// Edit Lead Function
+function editLead(campaignId, leadDate, currentCount) {
+    const newCount = prompt('Enter new leads count for ' + leadDate + ':', currentCount);
+    
+    if (newCount === null) return; // User cancelled
+    
+    if (newCount === '' || isNaN(newCount) || newCount < 0) {
+        alert('Please enter a valid number (0 or greater)');
+        return;
+    }
+    
+    // Show loading
+    const row = document.getElementById('lead-row-' + campaignId + '-' + leadDate);
+    if (row) {
+        row.style.opacity = '0.5';
+    }
+    
+    // Send AJAX request
+    const formData = new FormData();
+    formData.append('action', 'edit');
+    formData.append('campaign_id', campaignId);
+    formData.append('lead_date', leadDate);
+    formData.append('leads_count', newCount);
+    
+    fetch('ajax_manage_lead.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✓ Lead updated successfully!');
+            loadLeadsData(); // Reload the data
+        } else {
+            alert('✗ Error: ' + data.message);
+            if (row) row.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        alert('✗ Error updating lead');
+        if (row) row.style.opacity = '1';
+    });
+}
+
+// Delete Lead Function
+function deleteLead(campaignId, leadDate) {
+    if (!confirm('Are you sure you want to delete the lead entry for ' + leadDate + '?\n\nThis action cannot be undone!')) {
+        return;
+    }
+    
+    // Show loading
+    const row = document.getElementById('lead-row-' + campaignId + '-' + leadDate);
+    if (row) {
+        row.style.opacity = '0.5';
+    }
+    
+    // Send AJAX request
+    const formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('campaign_id', campaignId);
+    formData.append('lead_date', leadDate);
+    
+    fetch('ajax_manage_lead.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✓ Lead deleted successfully!');
+            loadLeadsData(); // Reload the data
+        } else {
+            alert('✗ Error: ' + data.message);
+            if (row) row.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        alert('✗ Error deleting lead');
+        if (row) row.style.opacity = '1';
+    });
+}
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
